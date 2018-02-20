@@ -134,3 +134,22 @@ class ContainsSpecialCharactersExtractor(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
         return self
+
+
+class NumberOfTokensCalculator(BaseEstimator, TransformerMixin):
+    """Takes in dataframe, extracts number of tokens in text"""
+
+    def __init__(self, col_name):
+        """
+        :param col_name:
+        """
+        self.col_name = col_name
+
+    def transform(self, X, y=None):
+        return X[self.col_name].apply(lambda x: len(tokenize_text(x, split_type='thorough')))
+
+    def fit(self, X, y=None):
+        """Returns `self` unless something different happens in train and test"""
+        return self
+
+
