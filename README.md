@@ -1,1 +1,1 @@
-# reviews-classifier
+# Reviews classifier
