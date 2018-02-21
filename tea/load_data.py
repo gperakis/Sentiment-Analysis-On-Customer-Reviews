@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup as Soup
 import pandas as pd
 from bs4 import Tag
-from AnalyticsEngine import DATA_DIR, setup_logger
+from tea import DATA_DIR, setup_logger
 from sklearn.model_selection import StratifiedShuffleSplit
 import re
 from collections import Counter
@@ -125,8 +125,7 @@ def get_df_stratified_split_in_train_validation(data,
         'y_train': y_train,
         'y_validation': y_val,
         'df_train': df_train,
-        'df_validation': df_validation,
-    }
+        'df_validation': df_validation}
 
     return result
 
