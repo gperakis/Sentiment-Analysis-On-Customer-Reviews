@@ -44,7 +44,31 @@ class ColumnExtractor(BaseEstimator, TransformerMixin):
         return self
 
 
-class DenseTransformer(TransformerMixin):
+class TextColumnExtractor(BaseEstimator, TransformerMixin):
+    """Takes in dataframe, extracts the column with the text"""
+
+    def __init__(self, column):
+        """
+
+        :param columns:
+        """
+        self.column = column
+
+    def transform(self, X, y=None):
+
+        if {self.column}.issubset(set(X.columns.tolist())):
+            return X[self.column]
+
+        else:
+            raise Exception('Columns declared, not in dataframe')
+
+    def fit(self, X, y=None):
+        """Returns `self` unless something different happens in train and test"""
+
+        return self
+
+
+class DenseTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None, **fit_params):
         return X.todense()
