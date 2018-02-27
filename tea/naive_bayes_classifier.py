@@ -1,7 +1,7 @@
 import string
 import re
 import math
-
+import operator
 
 class NaiveBayesClassifier(object):
     """Implementation of Naive Bayes for binary classification"""
@@ -83,11 +83,11 @@ class NaiveBayesClassifier(object):
         result = []
         for x in X:
             counts = self.get_word_counts(self.tokenize(x))
-            pos_score, neg_score, neu_score = 0, 0, 0
-            score = dict()
+            posterior = dict()
 
+            # initialize posterior dictionary
             for target_class in self.classes:
-                score[str(target_class)] = 0
+                posterior[str(target_class)] = 0
 
             for word, _ in counts.items():
                 if word not in self.voc:
@@ -96,72 +96,19 @@ class NaiveBayesClassifier(object):
                 # add Laplace smoothing
                 log_w_given_class = dict()
                 for target_class in self.classes:
-                    log_w_given_class[str(target_class)] = math.log((self.word_counts[str(target_class)].get(word, 0.0) + 1) / (
-                    sum(self.word_counts[str(target_class)].values()) + len(self.voc)))
+                    log_w_given_class[str(target_class)] = math.log(
+                        (self.word_counts[str(target_class)].get(word, 0.0) + 1) / (
+                            sum(self.word_counts[str(target_class)].values()) + len(self.voc)))
 
-                    score[str(target_class)] += log_w_given_class[str(target_class)]
+                    posterior[str(target_class)] += log_w_given_class[str(target_class)]
 
-                pos_score += log_w_given_class['1']
-                neg_score += log_w_given_class['0']
-                neu_score += log_w_given_class['2']
+            # add log priors to compute posterior for each class
+            for target_class in self.classes:
+                posterior[str(target_class)] += self.log_class_priors[str(target_class)]
 
-            pos_score += self.log_class_priors['1']
-            neg_score += self.log_class_priors['0']
-            neu_score += self.log_class_priors['2']
+            result.append(int(max(posterior.items(), key=operator.itemgetter(1))[0]))
 
-            if pos_score > neg_score and pos_score > neu_score:
-                result.append(1)
-            elif neg_score > pos_score and neg_score > neu_score:
-                result.append(0)
-            else:
-                result.append(2)
         return result
-
-    @staticmethod
-    def create_confusion_matrix(actual, predicted, category):
-        """
-        Calculates the confusion matrix for a give category.
-        :param actual: The actual labels of the data
-        :param predicted: The predicted labels of the data
-        :param category: The category we of the confusion matrix
-        :return: dictionary, with the values of the confusion matrix
-        """
-        conf_matrix = dict()
-        conf_matrix['TP'], conf_matrix['FP'], conf_matrix['TN'], conf_matrix['FN'] = 0, 0, 0, 0
-
-        print('The category is: {}'.format(category))
-        for sentence in predicted:
-            if sentence in actual[predicted[sentence]] and predicted[sentence] == category:
-                print('TP: Actual: {}, Predicted: {}'.format(category, category))
-                conf_matrix['TP'] += 1
-            elif sentence in actual[predicted[sentence]]:
-                print('TN: Actual: not category, Predicted: not category'.format(predicted[sentence]))
-                conf_matrix['TN'] += 1
-            elif sentence not in actual[predicted[sentence]] and predicted[sentence] == category:
-                print('FP: Actual: not category, Predicted: {}'.format(category))
-                conf_matrix['FP'] += 1
-            else:
-                print('FN: Actual: {}, Predicted: {}'.format(category, predicted[sentence]))
-                conf_matrix['FN'] += 1
-
-        return conf_matrix
-
-    @staticmethod
-    def calculate_evaluation_metrics(confusion_matrix):
-        """
-        Calculates the evaluation metrics of the model.
-        :param confusion_matrix: The confusion matrix of the model.
-        :return: dictionary, with the metrics of the model.
-        """
-        metrics = dict()
-
-        metrics['precision'] = confusion_matrix.get('TP', 1) / (
-            confusion_matrix.get('TP', 1) + confusion_matrix.get('FP', 1))
-        metrics['recall'] = confusion_matrix.get('TP', 1) / (
-            confusion_matrix.get('TP', 1) + confusion_matrix.get('FN', 1))
-        metrics['f1_score'] = 2 * metrics['precision'] * metrics['recall'] / (metrics['precision'] + metrics['recall'])
-
-        return metrics
 
 if __name__ == '__main__':
     train_data = ['the most fun film of the summer',
@@ -169,9 +116,10 @@ if __name__ == '__main__':
                   'just plain boring',
                   'entirely predictable and lacks energy',
                   'no surprises and very few laughs',
+                  'average performance',
                   'average performance']
 
-    train_target = [1, 1, 0, 0, 0, 2]
+    train_target = [1, 1, 0, 0, 0, 2, 2]
 
     model = NaiveBayesClassifier()
     model.fit(train_data, train_target)
@@ -188,4 +136,3 @@ if __name__ == '__main__':
 
     accuracy = sum(1 for i in range(len(pred)) if pred[i] == test_target[i]) / float(len(pred))
     print("{0:.4f}".format(accuracy))
-
