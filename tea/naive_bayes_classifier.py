@@ -1,14 +1,13 @@
-import numpy as np
 import string
 import re
 import math
-from pprint import pprint
 
 
 class NaiveBayesClassifier(object):
     """Implementation of Naive Bayes for binary classification"""
 
     def __init__(self):
+        self.classes = set()
         self.log_class_priors = {}
         self.word_counts = {}
         self.voc = set()
@@ -46,19 +45,24 @@ class NaiveBayesClassifier(object):
 
     def fit(self, X, Y):
         """
-        Computes log class priors. For each (document, label) pair, tokenize the document into words, add it to the
-        vocabulary for each class and update the number of counts. Also add that word to the global vocabulary.
+        Finds the classes of the dataset and computes log class priors. For each (document, label) pair, tokenize
+        the document into words, add it to the vocabulary for each class and update the number of counts. Also add
+        that word to the global vocabulary.
         :param X: a list with sentences
         :param Y: a list with the corresponding classes
         """
+        self.classes = set(Y)
+
         n = len(X)
-        self.log_class_priors['positive'] = math.log(sum(1 for label in Y if label == 1) / n)
-        self.log_class_priors['negative'] = math.log(sum(1 for label in Y if label == 0) / n)
-        self.word_counts['positive'] = {}
-        self.word_counts['negative'] = {}
+        for target_class in self.classes:
+            self.log_class_priors[str(target_class)] = math.log(sum(1 for label in Y if label == target_class) / n)
+            self.word_counts[str(target_class)] = {}
 
         for x, y in zip(X, Y):
-            c = 'positive' if y == 1 else 'negative'
+            for target_class in self.classes:
+                if y == target_class:
+                    c = str(target_class)
+
             counts = self.get_word_counts(self.tokenize(x))
             for word, count in counts.items():
                 if word not in self.voc:
@@ -67,7 +71,6 @@ class NaiveBayesClassifier(object):
                     self.word_counts[c][word] = 0.0
 
                 self.word_counts[c][word] += count
-
 
     def predict(self, X):
         """
@@ -80,28 +83,38 @@ class NaiveBayesClassifier(object):
         result = []
         for x in X:
             counts = self.get_word_counts(self.tokenize(x))
-            spam_score = 0
-            ham_score = 0
+            pos_score, neg_score, neu_score = 0, 0, 0
+            score = dict()
+
+            for target_class in self.classes:
+                score[str(target_class)] = 0
+
             for word, _ in counts.items():
                 if word not in self.voc:
                     continue
 
                 # add Laplace smoothing
-                log_w_given_spam = math.log((self.word_counts['positive'].get(word, 0.0) + 1) / (
-                    sum(self.word_counts['positive'].values()) + len(self.voc)))
-                log_w_given_ham = math.log((self.word_counts['negative'].get(word, 0.0) + 1) / (
-                    sum(self.word_counts['negative'].values()) + len(self.voc)))
+                log_w_given_class = dict()
+                for target_class in self.classes:
+                    log_w_given_class[str(target_class)] = math.log((self.word_counts[str(target_class)].get(word, 0.0) + 1) / (
+                    sum(self.word_counts[str(target_class)].values()) + len(self.voc)))
 
-                spam_score += log_w_given_spam
-                ham_score += log_w_given_ham
+                    score[str(target_class)] += log_w_given_class[str(target_class)]
 
-            spam_score += self.log_class_priors['positive']
-            ham_score += self.log_class_priors['negative']
+                pos_score += log_w_given_class['1']
+                neg_score += log_w_given_class['0']
+                neu_score += log_w_given_class['2']
 
-            if spam_score > ham_score:
+            pos_score += self.log_class_priors['1']
+            neg_score += self.log_class_priors['0']
+            neu_score += self.log_class_priors['2']
+
+            if pos_score > neg_score and pos_score > neu_score:
                 result.append(1)
-            else:
+            elif neg_score > pos_score and neg_score > neu_score:
                 result.append(0)
+            else:
+                result.append(2)
         return result
 
     @staticmethod
@@ -155,9 +168,10 @@ if __name__ == '__main__':
                   'very powerful',
                   'just plain boring',
                   'entirely predictable and lacks energy',
-                  'no surprises and very few laughs']
+                  'no surprises and very few laughs',
+                  'average performance']
 
-    train_target = [1, 1, 0, 0, 0]
+    train_target = [1, 1, 0, 0, 0, 2]
 
     model = NaiveBayesClassifier()
     model.fit(train_data, train_target)
@@ -165,9 +179,10 @@ if __name__ == '__main__':
     test_data = ['predictable with no fun',
                  'predictable with few fun',
                  'very very fun',
-                 'very fun']
+                 'very fun',
+                 'average']
 
-    test_target = [0, 0, 0, 1]
+    test_target = [0, 0, 1, 0, 2]
 
     pred = model.predict(test_data)
 
