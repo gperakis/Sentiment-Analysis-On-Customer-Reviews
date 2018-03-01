@@ -50,7 +50,7 @@ class TextColumnExtractor(BaseEstimator, TransformerMixin):
     def __init__(self, column):
         """
 
-        :param columns:
+        :param column:
         """
         self.column = column
 
@@ -86,7 +86,6 @@ class SingleColumnDimensionReshaper(BaseEstimator, TransformerMixin):
     def __init__(self):
         """
 
-        :param columns:
         """
         pass
 
@@ -234,7 +233,7 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
         """
         tokens = inp.split() if self.input_type == 'text' else inp
 
-        for token in tokens:
+        for token in set(tokens):
             if token in self.words_set:
                 return True
 

@@ -1,3 +1,7 @@
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_auc_score
+import pandas as pd
+
+
 def create_confusion_matrix(actual, predicted, category):
     """
     Calculates the confusion matrix for a give category.
@@ -36,10 +40,47 @@ def calculate_evaluation_metrics(confusion_matrix):
     metrics = dict()
 
     metrics['precision'] = confusion_matrix.get('TP', 1) / (
-        confusion_matrix.get('TP', 1) + confusion_matrix.get('FP', 1))
+            confusion_matrix.get('TP', 1) + confusion_matrix.get('FP', 1))
     metrics['recall'] = confusion_matrix.get('TP', 1) / (
-        confusion_matrix.get('TP', 1) + confusion_matrix.get('FN', 1))
+            confusion_matrix.get('TP', 1) + confusion_matrix.get('FN', 1))
     metrics['f1_score'] = 2 * metrics['precision'] * metrics['recall'] / (metrics['precision'] + metrics['recall'])
 
     return metrics
 
+
+def create_clf_report(y_true, y_pred, classes):
+    """
+    This function calculates several metrics about a classifier and creates a mini report.
+
+    :param y_true: iterable. An iterable of string or ints.
+    :param y_pred: iterable. An iterable of string or ints.
+    :param classes: iterable. An iterable of string or ints.
+    :return: dataframe. A pandas dataframe with the confusion matrix.
+    """
+    confusion = pd.DataFrame(confusion_matrix(y_true, y_pred),
+                             index=classes,
+                             columns=['predicted_{}'.format(c) for c in classes])
+
+    print("-" * 80, end='\n')
+    print("Accuracy Score: {0:.2f}%".format(accuracy_score(y_true, y_pred) * 100))
+    print("-" * 80)
+
+    print("Confusion Matrix:", end='\n\n')
+    print(confusion)
+
+    print("-" * 80, end='\n')
+    print("Classification Report:", end='\n\n')
+    print(classification_report(y_true, y_pred, digits=3), end='\n')
+
+    return confusion
+
+
+if __name__ == "__main__":
+
+    a = ['positive','positive','positive','positive','positive','positive','positive',
+         'negative','negative','negative','negative','negative','negative','negative']
+
+    b = ['negative', 'positive', 'negative', 'positive', 'negative', 'positive', 'positive',
+         'positive', 'negative', 'negative', 'negative', 'negative', 'negative', 'positive']
+
+    x= create_clf_report(y_true=a, y_pred=b, classes=['positive', 'negative'])
