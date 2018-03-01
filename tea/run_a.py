@@ -25,7 +25,7 @@ def run_grid_search(pipeline, parameters, scoring='accuracy'):
                                n_jobs=-1,
                                verbose=10,
                                refit=True,
-                               return_train_score=TransformerMixin,
+                               return_train_score=True,
                                scoring=scoring)
 
     logger.info("Performing grid search...")
@@ -47,6 +47,7 @@ def run_grid_search(pipeline, parameters, scoring='accuracy'):
 
 
 if __name__ == "__main__":
+
     data = parse_reviews(load_data=True)
 
     res = get_df_stratified_split_in_train_validation(data=data,
