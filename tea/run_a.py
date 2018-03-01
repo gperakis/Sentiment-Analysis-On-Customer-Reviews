@@ -19,8 +19,7 @@ def run_grid_search(pipeline, parameters, scoring='accuracy'):
     :return:
     """
 
-    # find the best parameters for both the feature extraction and the
-    # classifier
+    # find the best parameters for both the feature extraction and the classifier
     grid_search = GridSearchCV(pipeline,
                                parameters,
                                n_jobs=-1,
