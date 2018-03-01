@@ -1,4 +1,4 @@
-from tea import setup_logger
+from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS
 from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 import numpy as np
@@ -193,6 +193,78 @@ class NumberOfTokensCalculator(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         logger.info('Counting number of tokens for "{}" Column'.format(self.col_name))
         return X[self.col_name].apply(lambda x: len(tokenize_text(x, split_type='thorough')))
+
+    def fit(self, X, y=None):
+        """Returns `self` unless something different happens in train and test"""
+        return self
+
+
+class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
+    """Takes in dataframe, extracts number of tokens in text"""
+
+    def __init__(self,
+                 col_name,
+                 count_type='boolean',
+                 input_type='text',
+                 sentiment='negative'):
+        """
+        :param col_name:
+        """
+        assert sentiment in ['negative', 'positive']
+        assert count_type in ['boolean', 'counts']
+        assert input_type in ['text', 'tokens']
+
+        self.col_name = col_name
+        self.sentiment = sentiment
+        self.input_type = input_type
+        self.count_type = count_type
+
+        if self.sentiment == 'positive':
+
+            self.words_set = POSITIVE_WORDS
+        else:
+            self.words_set = NEGATIVE_WORDS
+
+    def calculate_boolean_output(self, inp):
+        """
+        This method checks whether a sentence contains at least one tokens that contains sentiment.
+
+        :param inp:
+        :return:
+        """
+        tokens = inp.split() if self.input_type == 'text' else inp
+
+        for token in tokens:
+            if token in self.words_set:
+                return True
+
+        return False
+
+    def calculate_counts_output(self, inp):
+        """
+        This method counts the number of tokens that contain sentiment in a text.
+        :param inp:
+        :return:
+        """
+        tokens = inp.split() if self.input_type == 'text' else inp
+
+        return sum([1 for t in tokens if t in self.words_set])
+
+    def transform(self, X, y=None):
+        """
+
+        :param X:
+        :param y:
+        :return:
+        """
+
+        logger.info('Searching for {} sentiment of tokens for "{}" Column'.format(self.sentiment, self.col_name))
+
+        if self.count_type == 'boolean':
+            return X[self.col_name].apply(self.calculate_boolean_output)
+
+        else:
+            return X[self.col_name].apply(self.calculate_counts_output)
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
