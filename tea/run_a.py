@@ -1,7 +1,7 @@
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import Normalizer, OneHotEncoder, LabelEncoder
-from tea.load_data import parse_reviews, get_df_stratified_split_in_train_validation
+from tea.load_data import parse_reviews
 from tea.features import *
 from pprint import pprint
 from sklearn.naive_bayes import GaussianNB
@@ -55,6 +55,7 @@ if __name__ == "__main__":
     X_train = data.drop(['polarity'], axis=1)
     y_train = data['polarity']
 
+    print(X_train)
     text_length = Pipeline([
         ('extract', TextLengthExtractor(col_name='text')),
         ('reshaper', SingleColumnDimensionReshaper())])
