@@ -10,10 +10,10 @@ from tea import setup_logger
 import pandas as pd
 
 logger = setup_logger(__name__)
-spacy_nlp = spacy.load('en', parse=False, tag=False, entity=False)
+# spacy_nlp = spacy.load('en', parse=False, tag=False, entity=False)
 tokenizer = ToktokTokenizer()
 
-STOPWORDS = nltk.corpus.stopwords.words('ecnglish')
+STOPWORDS = nltk.corpus.stopwords.words('english')
 STOPWORDS.remove('no')
 STOPWORDS.remove('not')
 
@@ -22,8 +22,8 @@ def remove_accents(input_str):
     """
     This method removes any accents from any string.
 
-    :param input_str: str.
-    :return: str.
+    :param input_str:
+    :return:
     """
     nfkd_form = unicodedata.normalize('NFKD', input_str)
     return u"".join([c for c in nfkd_form if not unicodedata.combining(c)]).lower()
@@ -31,12 +31,10 @@ def remove_accents(input_str):
 
 def tokenize_text(text, split_type='simple'):
     """
-    This method splits a text in simple or thorough mode. In simple mode it splits in spaces.
-    In thorough it splits in camel case, pascal case, numbers and special characters
 
-    :param text: str.
-    :param split_type: simple or thorough
-    :return: list of tokens
+    :param text:
+    :param split_type:
+    :return:
     """
     assert split_type in ['simple', 'thorough']
 
@@ -59,8 +57,8 @@ def tokenize_text(text, split_type='simple'):
 def extract_digits_from_text(text):
     """
     This function extracts any digits in a text
-    :param text: list
-    :return: list
+    :param text:
+    :return:
     """
     return list(map(int, re.findall(r'\d+', text))) if text else []
 
@@ -120,9 +118,9 @@ class TextPreprocessor(BaseEstimator, TransformerMixin):
         """
         This function expands contractions for the english language. For example "I've" will become "I have".
 
-        :param text: str.
+        :param text:
         :param contractions_m: dict. A dict containing contracted words as keys, and their expanded text as values.
-        :return: str.
+        :return:
         """
 
         contractions_pattern = re.compile('({})'.format('|'.join(contractions_m.keys())),
@@ -131,8 +129,8 @@ class TextPreprocessor(BaseEstimator, TransformerMixin):
         def expand_match(contraction):
             """
             This sub function helps into expanding a given contraction
-            :param contraction: str.
-            :return: str.
+            :param contraction:
+            :return:
             """
             match = contraction.group(0)
             first_char = match[0]
@@ -152,17 +150,17 @@ class TextPreprocessor(BaseEstimator, TransformerMixin):
     def remove_special_characters(text):
         """
         This method removes any special characters from text
-        :param text: str.
-        :return: str.
+        :param text:
+        :return:
         """
         return re.sub('[^a-zA-z0-9\s]', '', text)
 
     def remove_stopwords(self, text, is_lower_case=False):
         """
         This function removes stopwords from text.
-        :param text: str.
-        :param is_lower_case: bool.
-        :return: str.
+        :param text:
+        :param is_lower_case:
+        :return:
         """
         # tokenizing text
         tokens = tokenizer.tokenize(text)
@@ -183,9 +181,9 @@ class TextPreprocessor(BaseEstimator, TransformerMixin):
     @staticmethod
     def lemmatize_text(text):
         """
-        This method lemmatizes text using spacy
-        :param text: str.
-        :return: str.
+        This method lemmatizes text
+        :param text:
+        :return:
         """
         text = spacy_nlp(text)
 
@@ -195,10 +193,10 @@ class TextPreprocessor(BaseEstimator, TransformerMixin):
 
     def normalize_doc(self, doc):
         """
-        Ths method runs a pipeline of text preprocessing. All parameters are given in the constructor of the class
+        Ths method run a pipeline of text preprocessing. All parameters are given in the constructor of the class
         in order to be able to encapsulate it in an sklearn pipeline.
-        :param doc: str.
-        :return: str.
+        :param doc:
+        :return:
         """
         # strip HTML
         if self.html_stripping:
@@ -241,22 +239,10 @@ class TextPreprocessor(BaseEstimator, TransformerMixin):
         return doc
 
     def transform(self, X, y=None):
-        """
-
-        :param X: dataframe
-        :param y: labels
-        :return: series
-        """
-        logger.info('Pre-proccessing text for "{}" Column'.format(self.col_name))
+        logger.info('Pre-processing text for "{}" Column'.format(self.col_name))
         return X[self.col_name].apply(self.normalize_doc)
 
     def fit(self, X, y=None):
-        """
-
-        :param X:
-        :param y:
-        :return:
-        """
         """Returns `self` unless something different happens in train and test"""
         return self
 

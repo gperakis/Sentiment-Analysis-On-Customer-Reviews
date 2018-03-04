@@ -20,6 +20,7 @@ def parse_reviews(file='ABSA16_Laptops_Train_SB1_v2.xml',
     :return: pandas dataframe with 2 columns: polarity, text
     """
     path = "{}{}".format(DATA_DIR, file)
+    path = "C:\\Users\\giorg\\Downloads\\AUEB\\Text Analytics\\Assignments\\Assignment2\\reviews-classification\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
 
     if load_data:
         try:
@@ -134,9 +135,3 @@ if __name__ == "__main__":
 
     mydata = parse_reviews(load_data=True, save_data=True)
     print(mydata.head())
-
-    splits = get_df_stratified_split_in_train_validation(data=mydata,
-                                                         label='polarity',
-                                                         validation_size=.20)
-
-    print(splits.keys())
