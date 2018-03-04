@@ -239,7 +239,7 @@ class TextPreprocessor(BaseEstimator, TransformerMixin):
         return doc
 
     def transform(self, X, y=None):
-        logger.info('Pre-proccessing text for "{}" Column'.format(self.col_name))
+        logger.info('Pre-processing text for "{}" Column'.format(self.col_name))
         return X[self.col_name].apply(self.normalize_doc)
 
     def fit(self, X, y=None):
