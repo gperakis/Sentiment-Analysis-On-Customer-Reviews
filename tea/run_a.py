@@ -4,7 +4,7 @@ from sklearn.preprocessing import Normalizer, OneHotEncoder, LabelEncoder
 from tea.load_data import parse_reviews
 from tea.features import *
 from pprint import pprint
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.decomposition import PCA
 from time import time
 from sklearn.model_selection import GridSearchCV
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         ('user_based_feat', user_based_features)])
 
     final_pipeline = Pipeline([('features', final_features),
-                               ('clf', GaussianNB())])
+                               ('clf', MultinomialNB())])
 
     for i in final_pipeline.steps:
         pprint(i)
@@ -115,7 +115,8 @@ if __name__ == "__main__":
         'features__vect_based_feat__tfidf__use_idf': (True, False),
         'features__vect_based_feat__tfidf__norm': ('l1', 'l2'),
         'features__vect_based_feat__tfidf__smooth_idf': (True, False),
-        'features__vect_based_feat__tfidf__sublinear_tf': (True, False)}
+        # 'features__vect_based_feat__tfidf__sublinear_tf': (True, False)
+    }
 
     run_grid_search(X=X_train,
                     y=y_train,
