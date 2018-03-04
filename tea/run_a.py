@@ -10,9 +10,11 @@ from time import time
 from sklearn.model_selection import GridSearchCV
 
 
-def run_grid_search(pipeline, parameters, scoring='accuracy'):
+def run_grid_search(X, y, pipeline, parameters, scoring='accuracy'):
     """
 
+    :param X:
+    :param y:
     :param pipeline:
     :param parameters:
     :param scoring:
@@ -34,7 +36,7 @@ def run_grid_search(pipeline, parameters, scoring='accuracy'):
     logger.info(parameters)
 
     t0 = time()
-    grid_search.fit(X=X_train, y=y_train)
+    grid_search.fit(X=X, y=y)
 
     logger.info("Completed in %0.3fs" % (time() - t0))
     logger.info("Best score: %0.3f" % grid_search.best_score_)
@@ -50,15 +52,8 @@ if __name__ == "__main__":
 
     data = parse_reviews(load_data=True)
 
-    res = get_df_stratified_split_in_train_validation(data=data,
-                                                      label='polarity',
-                                                      validation_size=0.2,
-                                                      random_state=5)
-
-    X_train = res['x_train']
-    X_validation = res['x_validation']
-    y_train = res['y_train']
-    y_validation = res['y_validation']
+    X_train = data.drop(['polarity'], axis=1)
+    y_train = data['polarity']
 
     text_length = Pipeline([
         ('extract', TextLengthExtractor(col_name='text')),
@@ -105,7 +100,7 @@ if __name__ == "__main__":
     for i in final_pipeline.steps:
         pprint(i)
 
-    parameters = {
+    params = {
         'features__user_based_feat__extract__avg_token_length__extract__split_type': ['simple',
                                                                                       'thorough'],
         'features__user_based_feat__extract__std_token_length__extract__split_type': ['simple',
@@ -121,6 +116,8 @@ if __name__ == "__main__":
         'features__vect_based_feat__tfidf__smooth_idf': (True, False),
         'features__vect_based_feat__tfidf__sublinear_tf': (True, False)}
 
-    run_grid_search(pipeline=final_pipeline,
-                    parameters=parameters,
+    run_grid_search(X=X_train,
+                    y=y_train,
+                    pipeline=final_pipeline,
+                    parameters=params,
                     scoring='accuracy')
