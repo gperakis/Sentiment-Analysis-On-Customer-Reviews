@@ -10,7 +10,7 @@ from tea import setup_logger
 import pandas as pd
 
 logger = setup_logger(__name__)
-spacy_nlp = spacy.load('en', parse=False, tag=False, entity=False)
+# spacy_nlp = spacy.load('en', parse=False, tag=False, entity=False)
 tokenizer = ToktokTokenizer()
 
 STOPWORDS = nltk.corpus.stopwords.words('english')
