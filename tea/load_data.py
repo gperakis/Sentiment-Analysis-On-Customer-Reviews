@@ -14,10 +14,10 @@ def parse_reviews(file='ABSA16_Laptops_Train_SB1_v2.xml',
                   load_data=True):
     """
 
-    :param file:
-    :param save_data:
-    :param load_data:
-    :return:
+    :param file: str. the name of the of the file that stores the data
+    :param save_data: bool. whether the extracted data will be saved
+    :param load_data: bool. whether the extracted data should be loaded
+    :return: pandas dataframe with 2 columns: polarity, text
     """
     path = "{}{}".format(DATA_DIR, file)
 
@@ -71,11 +71,11 @@ def get_df_stratified_split_in_train_validation(data,
                                                 random_state=5):
     """
 
-    :param data:
-    :param label:
-    :param validation_size:
-    :param random_state:
-    :return:
+    :param data: pandas dataframe with the data
+    :param label: str. the label of the stratified split
+    :param validation_size: float. the size of validation
+    :param random_state: int. seed for reproducibility
+    :return: dictionary
     """
 
     data.reset_index(drop=True, inplace=True)
