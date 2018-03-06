@@ -3,7 +3,7 @@ import random
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils import resample
+from sklearn.utils import resample, shuffle
 
 from tea import setup_logger
 
@@ -89,7 +89,12 @@ def oversample(train_X, train_y):
 
 class SimpleMinorityClassOversampler(BaseEstimator, TransformerMixin):
 
-    def __init__(self, column, minority_class, n_samples=100, random_state=123):
+    def __init__(self,
+                 column,
+                 minority_class,
+                 n_samples=5,
+                 random_state=123,
+                 reshuffle=True):
         """
         1. Over sample Minority Class. Over-sampling is the process of randomly duplicating observations
         from the minority class in order to reinforce its signal. The most common way is to simply re-sample
@@ -111,6 +116,7 @@ class SimpleMinorityClassOversampler(BaseEstimator, TransformerMixin):
         self.n_samples = n_samples
         self.minority_class = minority_class
         self.random_state = random_state
+        self.reshuffle = reshuffle
 
     def transform(self, X, y=None):
         if y is None:
@@ -128,6 +134,9 @@ class SimpleMinorityClassOversampler(BaseEstimator, TransformerMixin):
 
         # Combine majority class with upsampled minority class
         df_oversampled = pd.concat([df, minority_samples_df])
+        if self.reshuffle:
+            df_oversampled = shuffle(df_oversampled, random_state=self.random_state)
+
 
         logger.info(df_oversampled[self.column].value_counts() / len(df_oversampled))
 
@@ -155,6 +164,7 @@ if __name__ == "__main__":
 
     obj = SimpleMinorityClassOversampler(column='polarity',
                                          minority_class='neutral',
-                                         n_samples=5)
+                                         n_samples=5,
+                                         reshuffle=True)
 
     print(obj.transform(X, y))
