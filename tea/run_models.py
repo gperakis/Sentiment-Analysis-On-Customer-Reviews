@@ -33,11 +33,11 @@ def run_grid_search(X, y, pipeline, parameters, scoring='accuracy'):
     t0 = time()
     grid_search.fit(X=X, y=y)
 
-    logger.info("Completed in %0.3fs" % (time() - t0))
-    logger.info("Best score: %0.3f" % grid_search.best_score_)
-    logger.info("Best parameters set:")
+    print("Completed in %0.3fs" % (time() - t0))
+    print("Best Score: %0.3f" % grid_search.best_score_)
+    print("Best parameters set:")
 
     best_parameters = grid_search.best_estimator_.get_params()
 
     for param_name in sorted(parameters.keys()):
-        logger.info("\t%s: %r" % (param_name, best_parameters[param_name]))
+        print("\t%s: %r" % (param_name, best_parameters[param_name]))
