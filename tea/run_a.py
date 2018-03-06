@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.preprocessing import Normalizer, OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import Normalizer, OneHotEncoder, LabelEncoder, MinMaxScaler
 from tea.load_data import parse_reviews
 from tea.features import *
 from pprint import pprint
@@ -79,7 +79,8 @@ if __name__ == "__main__":
     vect_based_features = Pipeline([('extract', TextColumnExtractor(column='text')),
                                     ('vect', CountVectorizer()),
                                     ('tfidf', TfidfTransformer()),
-                                    ('to_dense', DenseTransformer())])
+                                    ('to_dense', DenseTransformer()),
+                                    ('word_embedding', AverageSentenceEmbedding(col_name='text'))])
 
     user_based_features = Pipeline([('extract',
                                      FeatureUnion(transformer_list=[
@@ -96,6 +97,7 @@ if __name__ == "__main__":
         ('user_based_feat', user_based_features)])
 
     final_pipeline = Pipeline([('features', final_features),
+                               ('scaling', MinMaxScaler()),
                                ('clf', MultinomialNB())])
 
     for i in final_pipeline.steps:
