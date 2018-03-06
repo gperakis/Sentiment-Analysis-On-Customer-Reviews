@@ -1,7 +1,8 @@
-from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS
-from sklearn.base import BaseEstimator, TransformerMixin
-import pandas as pd
 import numpy as np
+import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
+
+from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS
 from tea.text_mining import tokenize_text
 from tea.word_embedding import WordEmbedding
 
@@ -181,6 +182,51 @@ class ContainsSpecialCharactersExtractor(BaseEstimator, TransformerMixin):
         return self
 
 
+class ContainsUppercaseWords(BaseEstimator, TransformerMixin):
+    """Takes in data-frame, extracts number of tokens in text"""
+
+    def __init__(self, col_name=None, how='bool'):
+        """
+
+        :param col_name:
+        :param how:
+        """
+        assert how in ['bool', 'count']
+        self.col_name = col_name
+        self.how = how
+
+    def calculate_uppercase_words_in_tokens(self, sentence):
+        """
+        This method checks whether we have words writter with uppercase chararcters in a sentence.
+        :param sentence:
+        :param how:
+        :return:
+        """
+        tokens = tokenize_text(text=sentence, split_type='simple')
+
+        if self.how == 'bool':
+            for t in tokens:
+                if t.isupper():
+                    return True
+            return False
+
+        else:
+            return sum([1 for token in tokens if token.isupper()])
+
+    def transform(self, X, y=None):
+
+        if self.col_name is None:
+            logger.info('Checking if text contains uppercase words for pandas series')
+            return X.apply(self.calculate_uppercase_words_in_tokens)
+
+        logger.info('Checking if text contains uppercase words for "{}" Column'.format(self.col_name))
+        return X[self.col_name].apply(self.calculate_uppercase_words_in_tokens)
+
+    def fit(self, X, y=None):
+        """Returns `self` unless something different happens in train and test"""
+        return self
+
+
 class NumberOfTokensCalculator(BaseEstimator, TransformerMixin):
     """Takes in dataframe, extracts number of tokens in text"""
 
@@ -200,7 +246,7 @@ class NumberOfTokensCalculator(BaseEstimator, TransformerMixin):
 
 
 class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
-    """Takes in dataframe, extracts number of tokens in text"""
+    """Takes in data-frame, extracts number of tokens in text"""
 
     def __init__(self,
                  col_name,
