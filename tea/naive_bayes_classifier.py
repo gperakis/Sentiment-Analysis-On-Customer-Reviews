@@ -3,6 +3,7 @@ import re
 import math
 import operator
 
+
 class NaiveBayesClassifier(object):
     """Implementation of Naive Bayes for binary classification"""
 

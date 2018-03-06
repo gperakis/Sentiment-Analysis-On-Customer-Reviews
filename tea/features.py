@@ -3,6 +3,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 import numpy as np
 from tea.text_mining import tokenize_text
+from tea.word_embedding import WordEmbedding
 
 logger = setup_logger(__name__)
 
@@ -264,6 +265,32 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
 
         else:
             return X[self.col_name].apply(self.calculate_counts_output)
+
+    def fit(self, X, y=None):
+        """Returns `self` unless something different happens in train and test"""
+        return self
+
+
+class AverageSentenceEmbedding(BaseEstimator, TransformerMixin):
+    """Takes in dataframe, the average of sentence's word embeddings"""
+
+    def __init__(self, col_name):
+        """
+        :param col_name: the name of the column that has the full text of the document
+        """
+        self.col_name = col_name
+        self.word_embeddings = WordEmbedding.get_word_embeddings()
+
+    def transform(self, X, y=None):
+        logger.info('Counting number of tokens for "{}" Column'.format(self.col_name))
+
+        def calculate_sentence_word_embedding(sentence):
+            sum_w_e = 0
+            for token in sentence.split():
+                sum_w_e += np.mean(self.word_embeddings.get(token, 0))
+            return sum_w_e / len(sentence.split())
+
+        return X[self.col_name].apply(lambda x: calculate_sentence_word_embedding(x))
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
