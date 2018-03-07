@@ -1,3 +1,4 @@
+tqdm
 beautifulsoup4
 numpy
 matplotlib

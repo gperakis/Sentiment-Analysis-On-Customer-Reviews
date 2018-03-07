@@ -1,9 +1,10 @@
 from pprint import pprint
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.preprocessing import Normalizer, MinMaxScaler
+from sklearn.preprocessing import Normalizer
 
 from tea.features import *
 from tea.load_data import parse_reviews
@@ -16,7 +17,6 @@ if __name__ == "__main__":
     X_train = data.drop(['polarity'], axis=1)
     y_train = data['polarity']
 
-    print(X_train)
     text_length = Pipeline([
         ('extract', TextLengthExtractor(col_name='text')),
         ('reshaper', SingleColumnDimensionReshaper())])
@@ -41,7 +41,7 @@ if __name__ == "__main__":
                                     ('vect', CountVectorizer()),
                                     ('tfidf', TfidfTransformer()),
                                     ('to_dense', DenseTransformer()),
-                                    ('word_embedding', SentenceEmbeddingExtractor(col_name='text'))])
+                                    ])
 
     user_based_features = Pipeline([('extract',
                                      FeatureUnion(transformer_list=[
@@ -55,30 +55,28 @@ if __name__ == "__main__":
 
     final_features = FeatureUnion(transformer_list=[
         ('vect_based_feat', vect_based_features),
-        ('user_based_feat', user_based_features)])
+        ('user_based_feat', user_based_features)
+    ]
+    )
 
     final_pipeline = Pipeline([('features', final_features),
-                               ('scaling', MinMaxScaler()),
-                               ('clf', MultinomialNB())])
+                               ('clf', OneVsRestClassifier(LogisticRegression()))])
 
     for i in final_pipeline.steps:
         pprint(i)
 
     params = {
-        'features__user_based_feat__extract__avg_token_length__extract__split_type': ['simple',
-                                                                                      'thorough'],
-        'features__user_based_feat__extract__std_token_length__extract__split_type': ['simple',
-                                                                                      'thorough'],
-
-        'features__vect_based_feat__vect__min_df': (0.005, 0.01, 0.025, 0.05, 0.1),
-        'features__vect_based_feat__vect__max_features': (None, 5000, 10000, 25000, 50000),
+        'features__user_based_feat__extract__avg_token_length__extract__split_type': ['thorough'],  # 'simple'
+        'features__user_based_feat__extract__std_token_length__extract__split_type': ['thorough'],  # 'simple'
+        'features__vect_based_feat__vect__min_df': (0.05, 0.1),  # 0.005, 0.01, 0.025,
+        'features__vect_based_feat__vect__max_features': (None, 50000),  # , 5000, 10000, 25000,
         'features__vect_based_feat__vect__stop_words': (None, 'english'),
         'features__vect_based_feat__vect__binary': (True, False),
-        'features__vect_based_feat__vect__ngram_range': ((1, 1), (1, 2), (1, 3)),  # unigrams, bigrams, trigrams
-        'features__vect_based_feat__tfidf__use_idf': (True, False),
-        'features__vect_based_feat__tfidf__norm': ('l1', 'l2'),
+        'features__vect_based_feat__vect__ngram_range': ((1, 2), (1, 3)),  # (1, 1), unigrams, bigrams, trigrams
+        'features__vect_based_feat__tfidf__use_idf': (True, False),  # False
+        'features__vect_based_feat__tfidf__norm': ('l2',),  # 'l1',
         'features__vect_based_feat__tfidf__smooth_idf': (True, False),
-        # 'features__vect_based_feat__tfidf__sublinear_tf': (True, False)
+        'features__vect_based_feat__tfidf__sublinear_tf': (True, False)
     }
 
     run_grid_search(X=X_train,
