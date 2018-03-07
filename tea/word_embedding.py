@@ -25,7 +25,9 @@ class WordEmbedding:
             text = in_file.read().decode("utf-8")
 
         word_embeddings = dict()
-        for line in tqdm(text.split('\n')):
+        for line in tqdm(text.split('\n'),
+                         desc='Loading Embeddings for {} dimensions'.format(dimension),
+                         unit=' Embeddings'):
             try:
                 w_e_numbers = list(map(lambda x: float(x), line.split()[1:]))
                 word_embeddings[line.split()[0]] = w_e_numbers

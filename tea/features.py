@@ -6,6 +6,7 @@ from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS
 from tea.text_mining import tokenize_text
 from tea.word_embedding import WordEmbedding
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from tqdm import tqdm
 
 logger = setup_logger(__name__)
 
@@ -392,7 +393,7 @@ class AverageSentenceEmbedding(BaseEstimator, TransformerMixin):
 
         centroid_values_updated = list()
 
-        for index_row, doc in enumerate(X):
+        for index_row, doc in enumerate(tqdm(X, unit=' Document')):
             sum_w_e = 0
 
             # breaks test in tokens.
@@ -445,6 +446,3 @@ if __name__ == "__main__":
     doc_embeddings = obj.fit_transform(X=mydata)
 
     print(doc_embeddings)
-
-    print(len(mydata))
-    print(len(doc_embeddings))
