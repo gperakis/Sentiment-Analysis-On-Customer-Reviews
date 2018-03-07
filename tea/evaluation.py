@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 from itertools import cycle
 import seaborn as sns
+from scipy import interp
 
 plt.rcParams['figure.figsize'] = (16, 8)
 
@@ -222,7 +223,7 @@ def create_benchmark_plot(train_X,
     return results
 
 
-def prec_recall_multi(n_classes, X_test, y_test, fitedclf):
+def prec_recall_multi(n_classes, X_test, y_test, fittedclf):
     """
 
     :param n_classes: int. the number of classes of the data
@@ -231,7 +232,7 @@ def prec_recall_multi(n_classes, X_test, y_test, fitedclf):
     :param fitedclf: fitted classifier
     :return: 3 dictionaries for precision recall, average_precision
     """
-    y_score = fitedclf.decision_function(X_test)
+    y_score = fittedclf.decision_function(X_test)
     precision = dict()
     recall = dict()
     average_precision = dict()
@@ -326,6 +327,118 @@ def plot_micro_prec_recall_per_class(n_classes, precision, recall, average_preci
 
     plt.show()
 
+def compute_roc_curve_area(n_classes, X_test, y_test, fittedclf):
+    """
+    Computes the roc curve and roc area for a multiclass problem
+    :param n_classes: number of classes
+    :param X_test: list
+    :param y_test: list
+    :param fittedclf: fitted classifier
+    :return: 3 dictionaries
+    """
+    y_score = fittedclf.decision_function(X_test)
+
+    # Compute ROC curve and ROC area for each class
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = metrics.roc_curve(y_test[:, i], y_score[:, i])
+        roc_auc[i] = metrics.auc(fpr[i], tpr[i])
+
+    # Compute micro-average ROC curve and ROC area
+    fpr["micro"], tpr["micro"], _ = metrics.roc_curve(y_test.ravel(), y_score.ravel())
+    roc_auc["micro"] = metrics.auc(fpr["micro"], tpr["micro"])
+
+    return fpr, tpr, roc_auc
+
+def plot_roc_single(fpr, tpr,roc_auc, nclass):
+    """
+    Plot roc for a single class
+    :param fpr: dict
+    :param tpr: dict
+    :param roc_auc: dict
+    :param nclass: int number of class
+    :return:
+    """
+    plt.figure()
+    lw = 2
+    plt.plot(fpr[nclass], tpr[nclass], color='darkorange',
+             lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[nclass])
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    plt.show()
+
+def plot_roc_multi(fpr, tpr, roc_auc, n_classes):
+    """
+    Plots roc curves for multiclass
+    :param fpr: dict
+    :param tpr: dict
+    :param roc_auc: dict
+    :param n_classes: int number of classes
+    :return:
+    """
+
+
+    lw = 2
+    # Compute macro-average ROC curve and ROC area
+
+    # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(n_classes):
+        mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+
+    # Finally average it and compute AUC
+    mean_tpr /= n_classes
+
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = metrics.auc(fpr["macro"], tpr["macro"])
+
+    # Plot all ROC curves
+
+    sns.set()
+    sns.set_style("dark")
+
+    pal = sns.color_palette("cubehelix", 3)
+    colors = cycle(pal.as_hex())
+
+    plt.figure()
+    plt.plot(fpr["micro"], tpr["micro"],
+             label='micro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["micro"]),
+             color='deeppink', linestyle=':', linewidth=4)
+
+    plt.plot(fpr["macro"], tpr["macro"],
+             label='macro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["macro"]),
+             color='navy', linestyle=':', linewidth=4)
+
+    #colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
+    for i, color in zip(range(n_classes), colors):
+        plt.plot(fpr[i], tpr[i], color=color, lw=lw,
+                 label='ROC curve of class {0} (area = {1:0.2f})'
+                       ''.format(i, roc_auc[i]))
+
+    plt.plot([0, 1], [0, 1], 'k--', lw=lw)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Some extension of Receiver operating characteristic to multi-class')
+    plt.legend(loc="lower right")
+    plt.show()
+
+
+
 if __name__ == "__main__":
     a = ['positive', 'positive', 'positive', 'positive', 'positive', 'positive', 'positive',
          'negative', 'negative', 'negative', 'negative', 'negative', 'negative', 'negative']
@@ -396,6 +509,11 @@ if __name__ == "__main__":
     classifier = OneVsRestClassifier(svm.LinearSVC(random_state=random_state))
     classifier.fit(X_train, Y_train)
 
+    # Learn to predict each class against the other
+    classifier2 = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
+                                             random_state=random_state))
+    classifier2.fit(X_train, Y_train)
+
     #Now plotting begins
 
     prec, recall, av_prec = prec_recall_multi(n_classes, X_test, Y_test, classifier)
@@ -405,3 +523,9 @@ if __name__ == "__main__":
     plot_micro_prec_recall(prec, recall, av_prec)
 
     plot_micro_prec_recall_per_class(n_classes, prec, recall, av_prec)
+
+    fprdict, tprdict, roc_aucdict = compute_roc_curve_area(n_classes, X_test, Y_test,  classifier2)
+
+    plot_roc_single(fprdict, tprdict, roc_aucdict, 2)
+
+    plot_roc_multi(fprdict, tprdict, roc_aucdict,n_classes)
