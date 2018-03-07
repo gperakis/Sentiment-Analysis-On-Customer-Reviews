@@ -5,6 +5,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS
 from tea.text_mining import tokenize_text
 from tea.word_embedding import WordEmbedding
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 logger = setup_logger(__name__)
 
@@ -320,23 +321,42 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
 class AverageSentenceEmbedding(BaseEstimator, TransformerMixin):
     """Takes in dataframe, the average of sentence's word embeddings"""
 
-    def __init__(self, col_name):
+    def __init__(self, col_name=None, embedding_type='tf'):
         """
         :param col_name: the name of the column that has the full text of the document
         """
+        assert embedding_type in ['tf', 'tfidf']
+
         self.col_name = col_name
         self.word_embeddings = WordEmbedding.get_word_embeddings()
+        self.embedding_type = embedding_type
 
-    def transform(self, X, y=None):
-        logger.info('Counting number of tokens for "{}" Column'.format(self.col_name))
+    def calculate_sentence_word_embedding(self, sentence):
+        """
 
-        def calculate_sentence_word_embedding(sentence):
+        :param sentence:
+        :return:
+        """
+        if self.embedding_type == 'tf':
             sum_w_e = 0
+
             for token in sentence.split():
-                sum_w_e += np.mean(self.word_embeddings.get(token, 0))
+                sum_w_e += np.mean(self.word_embeddings.get(token, [0]))
+
             return sum_w_e / len(sentence.split())
 
-        return X[self.col_name].apply(lambda x: calculate_sentence_word_embedding(x))
+        elif self.embedding_type == 'tfidf':
+            raise NotImplementedError()
+
+    def transform(self, X, y=None):
+
+        if self.col_name is None:
+
+            logger.info('Calculating word embeddings of sentences for pandas series')
+            return X.apply(lambda x: self.calculate_sentence_word_embedding(x))
+
+        logger.info('Calculating word embeddings of sentences for "{}" Column'.format(self.col_name))
+        return X[self.col_name].apply(lambda x: self.calculate_sentence_word_embedding(x))
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""

@@ -6,12 +6,17 @@ class WordEmbedding:
         pass
 
     @staticmethod
-    def get_word_embeddings():
+    def get_word_embeddings(dimension=200):
         """
         This method reads the
         :return: dict. with the vocabulary word and its word embedding vector in a list
         """
-        infile = "{}{}".format(DATA_DIR, 'glove.6B.200d.txt')
+        assert dimension in [50, 100, 200, 300]
+
+        t = 'glove.6B.{}d.txt'.format(dimension)
+
+        infile = "{}{}".format(DATA_DIR, t)
+
         with open(infile, 'rb') as in_file:
             text = in_file.read().decode("utf-8")
 
@@ -27,6 +32,7 @@ class WordEmbedding:
 
 
 if __name__ == '__main__':
+
     w_e = WordEmbedding.get_word_embeddings()
 
     print('the: {}'.format(w_e['the']))
@@ -34,6 +40,7 @@ if __name__ == '__main__':
     print('egg: {}'.format(w_e['egg']))
 
     import numpy as np
+
     print('the: {}'.format(np.mean(w_e['the'])))
 
 
