@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-
+from tea.load_data import parse_reviews
 from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS
 from tea.text_mining import tokenize_text
 from tea.word_embedding import WordEmbedding
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
 logger = setup_logger(__name__)
 
@@ -321,14 +321,20 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
 class AverageSentenceEmbedding(BaseEstimator, TransformerMixin):
     """Takes in dataframe, the average of sentence's word embeddings"""
 
-    def __init__(self, col_name=None, embedding_type='tf'):
+    def __init__(self,
+                 col_name=None,
+                 embedding_type='tf',
+                 embedding_dimensions=200):
         """
-        :param col_name: the name of the column that has the full text of the document
+
+        :param col_name:
+        :param embedding_type:
+        :param embedding_dimensions:
         """
         assert embedding_type in ['tf', 'tfidf']
 
         self.col_name = col_name
-        self.word_embeddings = WordEmbedding.get_word_embeddings()
+        self.word_embeddings = WordEmbedding.get_word_embeddings(dimension=embedding_dimensions)
         self.embedding_type = embedding_type
 
     def calculate_sentence_word_embedding(self, sentence):
@@ -348,16 +354,97 @@ class AverageSentenceEmbedding(BaseEstimator, TransformerMixin):
         elif self.embedding_type == 'tfidf':
             raise NotImplementedError()
 
+    def calculate_word_embeddings(self, X):
+        """
+
+        :param X:
+        :return:
+        """
+
+        if self.embedding_type == 'tf':
+
+            vectorizer = CountVectorizer(strip_accents='unicode',
+                                         analyzer='word',
+                                         ngram_range=(1, 1),
+                                         stop_words=None,
+                                         lowercase=True,
+                                         binary=False)
+
+        elif self.embedding_type == 'tfidf':
+
+            vectorizer = TfidfVectorizer(strip_accents='unicode',
+                                         analyzer='word',
+                                         ngram_range=(1, 1),
+                                         stop_words=None,
+                                         lowercase=True,
+                                         binary=False,
+                                         norm='l2',
+                                         use_idf=True,
+                                         smooth_idf=True)
+
+        else:
+            raise NotImplementedError()
+
+        X_transformed = vectorizer.fit_transform(X)
+
+        analyser = vectorizer.build_analyzer()
+        vocabulary_indices = vectorizer.vocabulary_
+
+        centroid_values_updated = list()
+
+        for index_row, doc in enumerate(X):
+            sum_w_e = 0
+
+            # breaks test in tokens.
+            doc_tokens = analyser(doc)
+
+            # We keep only the unique ones in order to get the tf-idf values from the stored matrix X_transformed.
+            for token in set(doc_tokens):
+
+                # get column index from the vocabulary in order to find the exact spot in the X_transformed matrix
+                index_col = vocabulary_indices[token]
+
+                # Getting the tf or idf value for the given word from the transformed matrix
+                token_tf_or_idf_value = X_transformed[index_row, index_col]
+
+                # Calculating the mean (centroid) value of the vector
+                mean_token_value = np.mean(self.word_embeddings.get(token, [0]))
+
+                # Getting the product of the idf and centroid
+                sum_w_e += (token_tf_or_idf_value * mean_token_value)
+
+            doc_final_value = sum_w_e / len(doc_tokens)
+            centroid_values_updated.append(doc_final_value)
+
+        return np.array(centroid_values_updated)
+
     def transform(self, X, y=None):
 
         if self.col_name is None:
-
             logger.info('Calculating word embeddings of sentences for pandas series')
-            return X.apply(lambda x: self.calculate_sentence_word_embedding(x))
+            # return X.apply(lambda x: self.calculate_sentence_word_embedding(x))
+            return self.calculate_word_embeddings(X=X)
 
         logger.info('Calculating word embeddings of sentences for "{}" Column'.format(self.col_name))
-        return X[self.col_name].apply(lambda x: self.calculate_sentence_word_embedding(x))
+        # return X[self.col_name].apply(lambda x: self.calculate_sentence_word_embedding(x))
+        return self.calculate_word_embeddings(X=X[self.col_name])
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
         return self
+
+
+if __name__ == "__main__":
+
+    mydata = parse_reviews(load_data=True, save_data=True)
+
+    obj = AverageSentenceEmbedding(embedding_dimensions=50,
+                                   col_name='text',
+                                   embedding_type='tfidf')
+
+    doc_embeddings = obj.fit_transform(X=mydata)
+
+    print(doc_embeddings)
+
+    print(len(mydata))
+    print(len(doc_embeddings))
