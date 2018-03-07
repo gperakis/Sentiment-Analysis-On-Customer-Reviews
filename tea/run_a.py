@@ -3,7 +3,7 @@ from pprint import pprint
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.preprocessing import Normalizer
+from sklearn.preprocessing import Normalizer, MinMaxScaler
 
 from tea.features import *
 from tea.load_data import parse_reviews
@@ -40,7 +40,8 @@ if __name__ == "__main__":
     vect_based_features = Pipeline([('extract', TextColumnExtractor(column='text')),
                                     ('vect', CountVectorizer()),
                                     ('tfidf', TfidfTransformer()),
-                                    ('to_dense', DenseTransformer())])
+                                    ('to_dense', DenseTransformer()),
+                                    ('word_embedding', SentenceEmbeddingExtractor(col_name='text'))])
 
     user_based_features = Pipeline([('extract',
                                      FeatureUnion(transformer_list=[
@@ -57,6 +58,7 @@ if __name__ == "__main__":
         ('user_based_feat', user_based_features)])
 
     final_pipeline = Pipeline([('features', final_features),
+                               ('scaling', MinMaxScaler()),
                                ('clf', MultinomialNB())])
 
     for i in final_pipeline.steps:
