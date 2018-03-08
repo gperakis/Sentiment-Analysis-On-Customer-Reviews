@@ -386,6 +386,7 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
         for index_row, doc in enumerate(tqdm(X, unit=' Document')):
 
             doc_vector = np.zeros(self.embedding_dimensions, dtype=float)
+            sum_of_tf_or_idfs = 0
 
             # breaks test in tokens.
             doc_tokens = analyser(doc)
@@ -398,15 +399,19 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
                 # Getting the tf or idf value for the given word from the transformed matrix
                 token_tf_or_idf_value = X_transformed[index_row, index_col]
 
+                # search for the embedding vector of the given token. If not found created a vector of zeros
+                # with the same shape.
                 token_embedding_vector = word_embeddings.get(token,
                                                              np.zeros(self.embedding_dimensions, dtype=float))
 
                 # Calculating the element product of the idf and embedding vector
                 token_embedding_vector = np.multiply(token_embedding_vector, token_tf_or_idf_value)
 
+                sum_of_tf_or_idfs += token_tf_or_idf_value
+
                 doc_vector += token_embedding_vector
 
-            doc_final_vector = np.divide(doc_vector, len(doc_tokens))
+            doc_final_vector = np.divide(doc_vector, sum_of_tf_or_idfs)
 
             embedded_vectors_updated.append(doc_final_vector)
 
@@ -419,12 +424,14 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
         :return:
         """
 
+        # getting the precalculated embedding vector avg centroid (constant value. Not a vector)
         centroid_word_embeddings = WordEmbedding.get_word_embeddings_mean(dimension=self.embedding_dimensions,
                                                                           save_data=False,
                                                                           load_data=True)
 
         if self.embedding_type == 'tf':
 
+            # setting the vectorizer
             vectorizer = CountVectorizer(strip_accents='unicode',
                                          analyzer='word',
                                          ngram_range=(1, 1),
@@ -433,7 +440,7 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
                                          binary=False)
 
         elif self.embedding_type == 'tfidf':
-
+            # setting the vectorizer
             vectorizer = TfidfVectorizer(strip_accents='unicode',
                                          analyzer='word',
                                          ngram_range=(1, 1),
@@ -447,8 +454,11 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
         else:
             raise NotImplementedError()
 
+        # transforming the docs in order to calculate the tf-idfs.
         X_transformed = vectorizer.fit_transform(X)
 
+        # getting the analyser and the vocabulary in order to get the tokens and the indices of the tokens in
+        # the aforementioned matrix.
         analyser = vectorizer.build_analyzer()
         vocabulary_indices = vectorizer.vocabulary_
 
@@ -456,6 +466,7 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
 
         for index_row, doc in enumerate(tqdm(X, unit=' Document')):
             sum_w_e = 0
+            sum_of_tf_or_idfs = 0
 
             # breaks test in tokens.
             doc_tokens = analyser(doc)
@@ -474,7 +485,9 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
                 # Getting the product of the idf and centroid
                 sum_w_e += (token_tf_or_idf_value * token_centroid)
 
-            doc_final_value = sum_w_e / len(doc_tokens)
+                sum_of_tf_or_idfs += token_tf_or_idf_value
+
+            doc_final_value = sum_w_e / float(sum_of_tf_or_idfs)
 
             centroid_values_updated.append(doc_final_value)
 
