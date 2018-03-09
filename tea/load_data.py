@@ -40,6 +40,7 @@ def parse_reviews(file='ABSA16_Laptops_Train_SB1_v2.xml',
     """
     path = "{}{}".format(DATA_DIR, file)
     # path = "C:\\Users\\giorg\\Downloads\\AUEB\\Text Analytics\\Assignments\\Assignment2\\reviews-classification\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
+    path = "C:\\Users\\m.nikoloudaki.SIEBEN\\OneDrive\\Documents\\DataScience MSc\\Text Engineering and Analytics\\Assignment2\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
 
     if load_data:
         try:
@@ -151,7 +152,7 @@ def get_df_stratified_split_in_train_validation(data,
 
 
 if __name__ == "__main__":
-    mydata = parse_reviews(load_data=True, save_data=True)
+    mydata = parse_reviews(load_data=True, save_data=False)
     print(mydata.head())
 
     calculate_label_ratio(mydata['polarity'])
