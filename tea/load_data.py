@@ -39,8 +39,8 @@ def parse_reviews(file='ABSA16_Laptops_Train_SB1_v2.xml',
     :return: pandas dataframe with 2 columns: polarity, text
     """
     path = "{}{}".format(DATA_DIR, file)
-    # path = "C:\\Users\\giorg\\Downloads\\AUEB\\Text Analytics\\Assignments\\Assignment2\\reviews-classification\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
-    path = "C:\\Users\\m.nikoloudaki.SIEBEN\\OneDrive\\Documents\\DataScience MSc\\Text Engineering and Analytics\\Assignment2\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
+    path = "C:\\Users\\giorg\\Downloads\\AUEB\\Text Analytics\\Assignments\\Assignment2\\reviews-classification\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
+    # path = "C:\\Users\\m.nikoloudaki.SIEBEN\\OneDrive\\Documents\\DataScience MSc\\Text Engineering and Analytics\\Assignment2\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
 
     if load_data:
         try:

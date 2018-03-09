@@ -1,16 +1,17 @@
 import re
 import unicodedata
+
+import nltk
+import pandas as pd
 from bs4 import BeautifulSoup
 from nltk.tokenize.toktok import ToktokTokenizer
-from tea import CONTRACTION_MAP
-import spacy
-import nltk
 from sklearn.base import BaseEstimator, TransformerMixin
+
+from tea import CONTRACTION_MAP
 from tea import setup_logger
-import pandas as pd
 
 logger = setup_logger(__name__)
-spacy_nlp = spacy.load('en', parse=False, tag=False, entity=False)
+# spacy_nlp = spacy.load('en', parse=False, tag=False, entity=False)
 tokenizer = ToktokTokenizer()
 
 STOPWORDS = nltk.corpus.stopwords.words('english')

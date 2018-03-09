@@ -1,8 +1,9 @@
 from pprint import pprint
 
+# from imblearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import Normalizer, MinMaxScaler
 
 from tea.features import *
@@ -38,7 +39,7 @@ if __name__ == "__main__":
         ('reshaper', SingleColumnDimensionReshaper())])
 
     contains_excl_bool = Pipeline([
-        ('bool_excl', ContainsSequencialChars(col_name='text',pattern='!!')),
+        ('bool_excl', ContainsSequencialChars(col_name='text', pattern='!!')),
         ('reshaper', SingleColumnDimensionReshaper())])
 
     sentiment_positive = Pipeline([
@@ -49,10 +50,8 @@ if __name__ == "__main__":
         ('sent_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative')),
         ('reshaper', SingleColumnDimensionReshaper())])
 
-
     embedding = Pipeline([
-        ('embedding', SentenceEmbeddingExtractor(col_name='text', embedding_output='vector')),
-        ('reshaper', SingleColumnDimensionReshaper())])
+        ('embedding', SentenceEmbeddingExtractor(col_name='text', embedding_output='vector'))])
 
     n_tokens = Pipeline([
         ('n_tokens', NumberOfTokensCalculator(col_name='text')),
@@ -65,7 +64,7 @@ if __name__ == "__main__":
     vect_based_features = Pipeline([('extract', TextColumnExtractor(column='text')),
                                     ('vect', CountVectorizer()),
                                     ('tfidf', TfidfTransformer()),
-                                    ('to_dense', DenseTransformer()), # transforms sparse to dense
+                                    ('to_dense', DenseTransformer()),  # transforms sparse to dense
                                     ])
 
     user_based_features = Pipeline([('extract',
@@ -85,12 +84,14 @@ if __name__ == "__main__":
                                     ])
 
     final_features = FeatureUnion(transformer_list=[
-        #('vect_based_feat', vect_based_features),
+        # ('vect_based_feat', vect_based_features),
         ('user_based_feat', user_based_features),
-        # ('embedding_feat', embedding)
+        ('embedding_feat', embedding)
     ])
 
+
     final_pipeline = Pipeline([('features', final_features),
+                               # ('over_sampler', SMOTE()),
                                ('scaling', MinMaxScaler()),
                                ('clf', MultinomialNB())])
 
@@ -98,23 +99,25 @@ if __name__ == "__main__":
         pprint(i)
 
     params = {
-        'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean','counts'],
+        'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
         'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
         'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],
-        'clf__alpha': (0, 0.5, 1.0) # MultinomialNB
+        'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
+        # 'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300], # embedding
+        'clf__alpha': (0, 0.5, 1.0),  # MultinomialNB
         # 'features__vect_based_feat__vect__min_df': (0.005, 0.01, 0.025, 0.05, 0.1),
         # 'features__vect_based_feat__vect__max_features': (None, 1000, 2500, 5000),
         # 'features__vect_based_feat__vect__stop_words': (None, 'english'),
-        # 'features__vect_based_feat__vect__binary': (True, False),
-        # 'features__vect_based_feat__vect__ngram_range': ((1, 1), (1, 2), (1, 3)),  # unigrams, bigrams, trigrams
-        # 'features__vect_based_feat__tfidf__use_idf': (True, False),
-        # 'features__vect_based_feat__tfidf__norm': ('l1', 'l2'),
-        # 'features__vect_based_feat__tfidf__smooth_idf': (True, False), # do not use
-        # 'features__vect_based_feat__tfidf__sublinear_tf': (True, False) # do not use
+        #     'features__vect_based_feat__vect__binary': (True, False),
+        #     'features__vect_based_feat__vect__ngram_range': ((1, 1), (1, 2), (1, 3)),  # unigrams, bigrams, trigrams
+        #     'features__vect_based_feat__tfidf__use_idf': (True, False),
+        #     'features__vect_based_feat__tfidf__norm': ('l1', 'l2'),
+        #     'features__vect_based_feat__tfidf__smooth_idf': (True, False), # do not use
+        #     'features__vect_based_feat__tfidf__sublinear_tf': (True, False) # do not use
     }
 
-    run_grid_search(X=X_train,
-                    y=y_train,
-                    pipeline=final_pipeline,
-                    parameters=params,
-                    scoring='accuracy')
+    grid_results = run_grid_search(X=X_train,
+                                   y=y_train,
+                                   pipeline=final_pipeline,
+                                   parameters=params,
+                                   scoring='accuracy')

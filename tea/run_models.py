@@ -42,3 +42,5 @@ def run_grid_search(X, y, pipeline, parameters, scoring='accuracy'):
 
     for param_name in sorted(parameters.keys()):
         print("\t%s: %r" % (param_name, best_parameters[param_name]))
+
+    return grid_search

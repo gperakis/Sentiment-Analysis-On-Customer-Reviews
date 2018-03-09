@@ -350,7 +350,7 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
                  col_name=None,
                  embedding_type='tf',
                  embedding_output='centroid',
-                 embedding_dimensions=200):
+                 embedding_dimensions=50):
         """
 
         :param col_name:
