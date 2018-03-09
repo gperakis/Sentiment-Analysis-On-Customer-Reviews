@@ -185,6 +185,29 @@ class ContainsSpecialCharactersExtractor(BaseEstimator, TransformerMixin):
         return self
 
 
+class ContainsSequencialChars(BaseEstimator, TransformerMixin):
+    """
+    Checks if special character patterns appear in the sentence.
+    """
+
+    def __init__(self, col_name, pattern="..."):
+        """
+        This class checks whether there are some given special characters in a text.
+        :param col_name:
+        """
+        self.col_name = col_name
+        self.pattern = pattern
+
+    def transform(self, X, y=None):
+        logger.info('Checking whether text contains special characters for "{}" Column'.format(self.col_name))
+
+        return X[self.col_name].apply(lambda s: bool(self.pattern in s))
+
+    def fit(self, X, y=None):
+        """Returns `self` unless something different happens in train and test"""
+        return self
+
+
 class ContainsUppercaseWords(BaseEstimator, TransformerMixin):
     """Takes in data-frame, extracts number of tokens in text"""
 
