@@ -21,6 +21,7 @@ def run_grid_search(X, y, pipeline, parameters, scoring='accuracy'):
                                parameters,
                                n_jobs=-1,
                                verbose=10,
+                               cv=5,
                                refit=True,
                                return_train_score=True,
                                scoring=scoring)

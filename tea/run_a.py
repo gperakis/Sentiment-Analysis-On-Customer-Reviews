@@ -1,6 +1,6 @@
 from pprint import pprint
 
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import Normalizer, MinMaxScaler
@@ -8,9 +8,6 @@ from sklearn.preprocessing import Normalizer, MinMaxScaler
 from tea.features import *
 from tea.load_data import parse_reviews
 from tea.run_models import run_grid_search
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 if __name__ == "__main__":
 
@@ -102,7 +99,7 @@ if __name__ == "__main__":
 
     params = {
         'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean','counts'],
-        'features__user_based_feat__extract__sentiment_negative__sent_positive__count_type': ['boolean','counts'],
+        'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
         'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],
         'clf__alpha': (0, 0.5, 1.0) # MultinomialNB
         # 'features__vect_based_feat__vect__min_df': (0.005, 0.01, 0.025, 0.05, 0.1),
