@@ -1,8 +1,11 @@
+from pprint import pprint
 from time import time
 
 from sklearn.model_selection import GridSearchCV
 
-from tea.features import *
+from tea import setup_logger
+
+logger = setup_logger(__name__)
 
 
 def run_grid_search(X, y, pipeline, parameters, scoring='accuracy'):
@@ -36,6 +39,9 @@ def run_grid_search(X, y, pipeline, parameters, scoring='accuracy'):
 
     print("Completed in %0.3fs" % (time() - t0))
     print("Best Score: %0.3f" % grid_search.best_score_)
+    print('Best Estimator')
+    pprint(grid_search.best_estimator_)
+    print()
     print("Best parameters set:")
 
     best_parameters = grid_search.best_estimator_.get_params()
