@@ -76,7 +76,7 @@ def parse_reviews(file='ABSA16_Laptops_Train_SB1_v2.xml',
                         data.append({'text': sentence, 'polarity': polarity})
 
     extracted_data = pd.DataFrame(data)
-
+    extracted_data = extracted_data[extracted_data['polarity'] != 'neutral']
     if save_data:
         logger.info('Saving etracted reviews metadata from file: {}'.format(file))
         x = path.split('.')[-1]
