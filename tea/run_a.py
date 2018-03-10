@@ -83,8 +83,8 @@ if __name__ == "__main__":
                                     ('scale', Normalizer())])
 
     final_features = FeatureUnion(transformer_list=[
-        ('vect_based_feat', vect_based_features),
-        # ('user_based_feat', user_based_features),
+        # ('vect_based_feat', vect_based_features),
+        ('user_based_feat', user_based_features),
         # ('embedding_feat', embedding)
     ])
 
@@ -96,7 +96,6 @@ if __name__ == "__main__":
                                ('clf', SVC()),
                                # ('clf', MultinomialNB())
                                # ('clf', LogisticRegression())
-                               # ('clf', svm.SVC())
                                # ('clf', KNeighborsClassifier())
                                # ('clf', GradientBoostingClassifier())
                                # ('clf', RandomForestClassifier())
@@ -104,18 +103,18 @@ if __name__ == "__main__":
 
 
     params = {
-        # 'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
-        # 'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
-        # 'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],
-        'features__vect_based_feat__vect__min_df': (0.01, 0.05),
-        'features__vect_based_feat__vect__max_features': (None, 1000, 2500, 5000),
-        'features__vect_based_feat__vect__stop_words': (None, 'english'),
-        'features__vect_based_feat__vect__binary': (True, False),
-        'features__vect_based_feat__vect__ngram_range': ((1, 1), (1, 2), (1, 3)),  # unigrams, bigrams, trigrams
-        'features__vect_based_feat__tfidf__use_idf': (True, False),
-        'features__vect_based_feat__tfidf__norm': ('l1', 'l2'),
-        'features__vect_based_feat__tfidf__smooth_idf': (True, False),  # do not use
-        'features__vect_based_feat__tfidf__sublinear_tf': (True, False),  # do not use
+        'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
+        'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
+        'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],
+        # 'features__vect_based_feat__vect__min_df': (0.01, 0.05),
+        # 'features__vect_based_feat__vect__max_features': (None, 1000, 2500, 5000),
+        # 'features__vect_based_feat__vect__stop_words': (None, 'english'),
+        # 'features__vect_based_feat__vect__binary': (True, False),
+        # 'features__vect_based_feat__vect__ngram_range': ((1, 1), (1, 2), (1, 3)),  # unigrams, bigrams, trigrams
+        # 'features__vect_based_feat__tfidf__use_idf': (True, False),
+        # 'features__vect_based_feat__tfidf__norm': ('l1', 'l2'),
+        # 'features__vect_based_feat__tfidf__smooth_idf': (True, False),  # do not use
+        # 'features__vect_based_feat__tfidf__sublinear_tf': (True, False),  # do not use
         # 'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
         # 'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300],  # embedding
         # 'clf__penalty': ('l1', 'l2'),  # Logistic
