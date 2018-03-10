@@ -142,8 +142,12 @@ class WordLengthMetricsExtractor(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
 
-        logger.info('Calculating {} for "{}" Column'.format(self.metric, self.col_name))
-        x = X[self.col_name].apply(lambda s: tokenize_text(text=s, split_type=self.split_type))
+        if X is None:
+            x = X.apply(lambda s: tokenize_text(text=s, split_type=self.split_type))
+
+        else:
+            logger.info('Calculating {} for "{}" Column'.format(self.metric, self.col_name))
+            x = X[self.col_name].apply(lambda s: tokenize_text(text=s, split_type=self.split_type))
 
         return x.apply(self.calculate_metric)
 
@@ -163,6 +167,10 @@ class TextLengthExtractor(BaseEstimator, TransformerMixin):
         self.col_name = col_name
 
     def transform(self, X, y=None):
+        if X is None:
+            logger.info('Calculating text length for "{}" Column'.format(self.col_name))
+            return X.apply(len)
+
         logger.info('Calculating text length for "{}" Column'.format(self.col_name))
         return X[self.col_name].apply(len)
 
@@ -181,7 +189,11 @@ class ContainsSpecialCharactersExtractor(BaseEstimator, TransformerMixin):
         self.SPECIAL_CHARACTERS = set("!@#$%^&*()_+-=")
 
     def transform(self, X, y=None):
+
         logger.info('Checking whether text contains special characters for "{}" Column'.format(self.col_name))
+
+        if X is None:
+            return X.apply(lambda s: bool(set(s) & self.SPECIAL_CHARACTERS))
 
         return X[self.col_name].apply(lambda s: bool(set(s) & self.SPECIAL_CHARACTERS))
 
@@ -190,7 +202,7 @@ class ContainsSpecialCharactersExtractor(BaseEstimator, TransformerMixin):
         return self
 
 
-class ContainsSequencialChars(BaseEstimator, TransformerMixin):
+class ContainsSequentialChars(BaseEstimator, TransformerMixin):
     """
     Checks if special character patterns appear in the sentence.
     """
@@ -204,7 +216,11 @@ class ContainsSequencialChars(BaseEstimator, TransformerMixin):
         self.pattern = pattern
 
     def transform(self, X, y=None):
+
         logger.info('Checking whether text contains special characters for "{}" Column'.format(self.col_name))
+
+        if X is None:
+            X.apply(lambda s: bool(self.pattern in s))
 
         return X[self.col_name].apply(lambda s: bool(self.pattern in s))
 
@@ -269,6 +285,10 @@ class NumberOfTokensCalculator(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
         logger.info('Counting number of tokens for "{}" Column'.format(self.col_name))
+
+        if X is None:
+            return X.apply(lambda x: len(tokenize_text(x, split_type='thorough')))
+
         return X[self.col_name].apply(lambda x: len(tokenize_text(x, split_type='thorough')))
 
     def fit(self, X, y=None):
@@ -337,7 +357,13 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
 
         logger.info('Searching for {} sentiment of tokens for "{}" Column'.format(self.sentiment, self.col_name))
 
-        if self.count_type == 'boolean':
+        if X is None and self.count_type == 'boolean':
+            return X.apply(self.calculate_boolean_output)
+
+        elif X is None and self.count_type == 'counts':
+            return X.apply(self.calculate_counts_output)
+
+        elif self.count_type == 'boolean':
             return X[self.col_name].apply(self.calculate_boolean_output)
 
         else:
@@ -642,12 +668,10 @@ class LemmaExtractor(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
         if self.col_name is None:
-            logger.info('Calculating word embeddings of sentences for pandas series')
-            # return X.apply(lambda x: self.calculate_sentence_word_embedding(x))
+            logger.info('Extracted Lemmatized words for text for pandas series')
             return X.apply(self.lemmatize_text)
 
-        logger.info('Calculating word embeddings of sentences for "{}" Column'.format(self.col_name))
-        # return X[self.col_name].apply(lambda x: self.calculate_sentence_word_embedding(x))
+        logger.info('Extracted Lemmatized words for text for "{}" Column'.format(self.col_name))
         return X[self.col_name].apply(self.lemmatize_text)
 
     def fit(self, X, y=None):

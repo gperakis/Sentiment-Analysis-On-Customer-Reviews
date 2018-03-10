@@ -35,11 +35,11 @@ if __name__ == "__main__":
         ('reshaper', SingleColumnDimensionReshaper())])
 
     contains_dots_bool = Pipeline([
-        ('bool_dots', ContainsSequencialChars(col_name='text', pattern='..')),
+        ('bool_dots', ContainsSequentialChars(col_name='text', pattern='..')),
         ('reshaper', SingleColumnDimensionReshaper())])
 
     contains_excl_bool = Pipeline([
-        ('bool_excl', ContainsSequencialChars(col_name='text', pattern='!!')),
+        ('bool_excl', ContainsSequentialChars(col_name='text', pattern='!!')),
         ('reshaper', SingleColumnDimensionReshaper())])
 
     sentiment_positive = Pipeline([

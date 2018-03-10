@@ -1,5 +1,3 @@
-from pprint import pprint
-
 # from imblearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.pipeline import FeatureUnion, Pipeline
@@ -17,9 +15,12 @@ if __name__ == "__main__":
     X_train = data.drop(['polarity'], axis=1)
     y_train = data['polarity']
 
-    # print(X_train)
+    X_train_lemmatized = LemmaExtractor(col_name='text').fit_transform(X_train)
+
+
+
     text_length = Pipeline([
-        ('text_length', TextLengthExtractor(col_name='text')),
+        ('text_length', TextLengthExtractor(col_name=None)),
         ('reshaper', SingleColumnDimensionReshaper())])
 
     avg_token_length = Pipeline([
@@ -35,11 +36,11 @@ if __name__ == "__main__":
         ('reshaper', SingleColumnDimensionReshaper())])
 
     contains_dots_bool = Pipeline([
-        ('bool_dots', ContainsSequencialChars(col_name='text', pattern='..')),
+        ('bool_dots', ContainsSequentialChars(col_name='text', pattern='..')),
         ('reshaper', SingleColumnDimensionReshaper())])
 
     contains_excl_bool = Pipeline([
-        ('bool_excl', ContainsSequencialChars(col_name='text', pattern='!!')),
+        ('bool_excl', ContainsSequentialChars(col_name='text', pattern='!!')),
         ('reshaper', SingleColumnDimensionReshaper())])
 
     sentiment_positive = Pipeline([
@@ -103,8 +104,6 @@ if __name__ == "__main__":
                                # ('clf', RandomForestClassifier())
                                ])
 
-    for i in final_pipeline.steps:
-        pprint(i)
 
     params = {
         # 'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
@@ -132,7 +131,7 @@ if __name__ == "__main__":
         # 'clf__max_depth': [10, 50, 100, None],  # Random Forest
     }
 
-    grid_results = run_grid_search(X=X_train,
+    grid_results = run_grid_search(X=X_train_lemmatized,
                                    y=y_train,
                                    pipeline=final_pipeline,
                                    parameters=params,
