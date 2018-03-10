@@ -15,12 +15,10 @@ if __name__ == "__main__":
     X_train = data.drop(['polarity'], axis=1)
     y_train = data['polarity']
 
-    X_train_lemmatized = LemmaExtractor(col_name='text').fit_transform(X_train)
-
-
+    X_train_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_train))
 
     text_length = Pipeline([
-        ('text_length', TextLengthExtractor(col_name=None)),
+        ('text_length', TextLengthExtractor(col_name='text')),
         ('reshaper', SingleColumnDimensionReshaper())])
 
     avg_token_length = Pipeline([
@@ -64,7 +62,6 @@ if __name__ == "__main__":
 
     vect_based_features = Pipeline([('extract', TextColumnExtractor(column='text')),
                                     ('contractions', ContractionsExpander()),
-                                    ('lemmatizer', LemmaExtractor()),
                                     ('vect', CountVectorizer()),
                                     ('tfidf', TfidfTransformer()),
                                     ('to_dense', DenseTransformer()),  # transforms sparse to dense
@@ -95,6 +92,7 @@ if __name__ == "__main__":
                                # ('over_sampler', SMOTE()),
                                ('scaling', StandardScaler()),
                                # ('scaling', MinMaxScaler()),
+                               # ('pca', PCA()),
                                ('clf', SVC()),
                                # ('clf', MultinomialNB())
                                # ('clf', LogisticRegression())
@@ -109,7 +107,7 @@ if __name__ == "__main__":
         # 'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
         # 'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
         # 'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],
-        'features__vect_based_feat__vect__min_df': (0.01, 0.05, None),
+        'features__vect_based_feat__vect__min_df': (0.01, 0.05),
         'features__vect_based_feat__vect__max_features': (None, 1000, 2500, 5000),
         'features__vect_based_feat__vect__stop_words': (None, 'english'),
         'features__vect_based_feat__vect__binary': (True, False),
