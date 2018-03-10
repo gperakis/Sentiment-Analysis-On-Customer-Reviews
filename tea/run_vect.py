@@ -3,7 +3,10 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import Normalizer, StandardScaler
 from sklearn.svm import SVC
-
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import  MultinomialNB
 from tea.features import *
 from tea.load_data import parse_reviews
 from tea.run_models import run_grid_search
