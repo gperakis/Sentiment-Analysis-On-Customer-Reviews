@@ -105,9 +105,9 @@ if __name__ == "__main__":
 
     params = {
         'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
-    # user
+        # user
         'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
-    # user
+        # user
         'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],  # user
         # 'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
         # 'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300], # embedding
