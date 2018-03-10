@@ -1,8 +1,8 @@
 from pprint import pprint
 
+from sklearn.ensemble import RandomForestClassifier
 # from imblearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import Normalizer, MinMaxScaler
 
@@ -86,14 +86,20 @@ if __name__ == "__main__":
     final_features = FeatureUnion(transformer_list=[
         # ('vect_based_feat', vect_based_features),
         ('user_based_feat', user_based_features),
-        ('embedding_feat', embedding)
+        # ('embedding_feat', embedding)
     ])
 
 
     final_pipeline = Pipeline([('features', final_features),
                                # ('over_sampler', SMOTE()),
                                ('scaling', MinMaxScaler()),
-                               ('clf', MultinomialNB())])
+                               # ('clf', MultinomialNB())
+                               # ('clf', LogisticRegression())
+                               # ('clf', svm.SVC())
+                               # ('clf', KNeighborsClassifier())
+                               # ('clf', GradientBoostingClassifier())
+                               ('clf', RandomForestClassifier())
+                               ])
 
     for i in final_pipeline.steps:
         pprint(i)
@@ -102,9 +108,18 @@ if __name__ == "__main__":
         'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
         'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
         'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],
-        'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
+        # 'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
         # 'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300], # embedding
-        'clf__alpha': (0, 0.5, 1.0),  # MultinomialNB
+        # 'clf__alpha': (0, 0.5, 1.0),  # MultinomialNB
+        # 'clf__penalty': ('l1', 'l2') # Logistic
+        # 'clf__kernel': ('rbf', 'linear'), # SVM
+        # 'clf__gamma': (0.1, 0.01, 0.001, 0.0001) # SVM
+        # 'clf__p': (1, 2), # 1: mahnatan, 2: eucledian # k-NN
+        # 'clf__n_neighbors': (3, 4, 5, 6, 7, 8) #k-NN
+        # 'clf__learning_rate': (0.1, 0.01, 0.001), # Gradient Boosting
+        # 'clf__n_estimators': (100, 300, 600) # Gradient Boosting
+        'clf__max_depth': [10, 50, 100, None],  # Random Forest
+        'clf__n_estimators': [200, 800, 1000]  # Random Forest
         # 'features__vect_based_feat__vect__min_df': (0.005, 0.01, 0.025, 0.05, 0.1),
         # 'features__vect_based_feat__vect__max_features': (None, 1000, 2500, 5000),
         # 'features__vect_based_feat__vect__stop_words': (None, 'english'),
