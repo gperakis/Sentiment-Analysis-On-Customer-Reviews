@@ -1,13 +1,18 @@
+import re
+
 import numpy as np
 import pandas as pd
+import spacy
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from tqdm import tqdm
 
-from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS
+from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS, CONTRACTION_MAP
 from tea.load_data import parse_reviews
 from tea.text_mining import tokenize_text
 from tea.word_embedding import WordEmbedding
+
+SPACY_NLP = spacy.load('en', parse=False, tag=False, entity=False)
 
 logger = setup_logger(__name__)
 
@@ -540,6 +545,110 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
         logger.info('Calculating word embeddings of sentences for "{}" Column'.format(self.col_name))
         # return X[self.col_name].apply(lambda x: self.calculate_sentence_word_embedding(x))
         return self.get_updated_embeddings(X=X[self.col_name])
+
+    def fit(self, X, y=None):
+        """Returns `self` unless something different happens in train and test"""
+        return self
+
+
+class ContractionsExpander(BaseEstimator, TransformerMixin):
+    """Takes in data-frame, the average of sentence's word embeddings"""
+
+    def __init__(self,
+                 col_name=None,
+                 contractions_mapper=CONTRACTION_MAP):
+        """
+
+        :param col_name:
+        :param contractions_mapper:
+        """
+        self.col_name = col_name
+        self.contractions_mapper = contractions_mapper
+
+    def expand_contractions(self, text):
+        """
+        This function expands contractions for the english language. For example "I've" will become "I have".
+
+        :param text:
+        :param contractions_m: dict. A dict containing contracted words as keys, and their expanded text as values.
+        :return:
+        """
+
+        contractions_pattern = re.compile('({})'.format('|'.join(self.contractions_mapper.keys())),
+                                          flags=re.IGNORECASE | re.DOTALL)
+
+        def expand_match(contraction):
+            """
+            This sub function helps into expanding a given contraction
+            :param contraction:
+            :return:
+            """
+            match = contraction.group(0)
+            first_char = match[0]
+
+            expanded_contr = self.contractions_mapper.get(
+                match) if self.contractions_mapper.get(match) else self.contractions_mapper.get(match.lower())
+
+            expanded_contr = first_char + expanded_contr[1:]
+
+            return expanded_contr
+
+        expanded_text = contractions_pattern.sub(expand_match, text)
+        expanded_text = re.sub("'", "", expanded_text)
+
+        return expanded_text
+
+    def transform(self, X, y=None):
+        if self.col_name is None:
+            logger.info('Extracting contractions for pandas series')
+            return X.apply(self.expand_contractions)
+
+        logger.info('Extracting contractions for "{}" Column'.format(self.col_name))
+        return X[self.col_name].apply(self.expand_contractions)
+
+    def fit(self, X, y=None):
+        """Returns `self` unless something different happens in train and test"""
+        return self
+
+
+class LemmaExtractor(BaseEstimator, TransformerMixin):
+    """Takes in data-frame, gets lemmatized words"""
+
+    def __init__(self,
+                 col_name=None,
+                 spacy_nlp=SPACY_NLP,
+                 contractions_mapper=CONTRACTION_MAP):
+        """
+
+        :param col_name:
+        :param spacy_nlp:
+        :param contractions_mapper:
+        """
+        self.col_name = col_name
+        self.contractions_mapper = contractions_mapper
+        self.spacy_nlp = spacy_nlp
+
+    def lemmatize_text(self, text):
+        """
+        This method lemmatizes text
+        :param text:
+        :return:
+        """
+        text = self.spacy_nlp(text)
+
+        text = ' '.join([word.lemma_ if word.lemma_ != '-PRON-' else word.text for word in text])
+
+        return text
+
+    def transform(self, X, y=None):
+        if self.col_name is None:
+            logger.info('Calculating word embeddings of sentences for pandas series')
+            # return X.apply(lambda x: self.calculate_sentence_word_embedding(x))
+            return X.apply(self.lemmatize_text)
+
+        logger.info('Calculating word embeddings of sentences for "{}" Column'.format(self.col_name))
+        # return X[self.col_name].apply(lambda x: self.calculate_sentence_word_embedding(x))
+        return X[self.col_name].apply(self.lemmatize_text)
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
