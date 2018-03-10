@@ -4,8 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 # from imblearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.pipeline import FeatureUnion, Pipeline
-from sklearn.preprocessing import Normalizer, StandardScaler
-from sklearn.svm import SVC
+from sklearn.preprocessing import Normalizer, MinMaxScaler
 
 from tea.features import *
 from tea.load_data import parse_reviews
@@ -13,7 +12,7 @@ from tea.run_models import run_grid_search
 
 if __name__ == "__main__":
 
-    data = parse_reviews(load_data=False)
+    data = parse_reviews(load_data=True)
 
     X_train = data.drop(['polarity'], axis=1)
     y_train = data['polarity']
@@ -90,11 +89,8 @@ if __name__ == "__main__":
         ('embedding_feat', embedding)
     ])
 
-
     final_pipeline = Pipeline([('features', final_features),
                                # ('over_sampler', SMOTE()),
-                               ('scaling', StandardScaler()),
-                               ('clf', SVC())])
                                ('scaling', MinMaxScaler()),
                                # ('clf', MultinomialNB())
                                # ('clf', LogisticRegression())
@@ -111,8 +107,8 @@ if __name__ == "__main__":
         'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
         'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
         'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],
-        # 'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
-        # 'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300], # embedding
+        'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
+        'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300],  # embedding
         # 'clf__alpha': (0, 0.5, 1.0),  # MultinomialNB
         # 'clf__penalty': ('l1', 'l2') # Logistic
         # 'clf__kernel': ('rbf', 'linear'), # SVM
@@ -132,19 +128,6 @@ if __name__ == "__main__":
         #     'features__vect_based_feat__tfidf__norm': ('l1', 'l2'),
         #     'features__vect_based_feat__tfidf__smooth_idf': (True, False), # do not use
         #     'features__vect_based_feat__tfidf__sublinear_tf': (True, False) # do not use
-        # 'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
-        # # 'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300], # embedding
-        # 'clf__alpha': (0.5, 1.0),  # MultinomialNB
-        'clf__kernel': ['rbf', ],
-        'features__vect_based_feat__vect__min_df': (0.005, 0.01, 0.025, 0.05, 0.1),
-        'features__vect_based_feat__vect__max_features': (None, 1000, 2500, 5000),
-        'features__vect_based_feat__vect__stop_words': (None, 'english'),
-        'features__vect_based_feat__vect__binary': (True, False),
-        'features__vect_based_feat__vect__ngram_range': ((1, 1), (1, 2), (1, 3)),  # unigrams, bigrams, trigrams
-        'features__vect_based_feat__tfidf__use_idf': (True, False),
-        'features__vect_based_feat__tfidf__norm': ('l2',),  # 'l1',
-        # 'features__vect_based_feat__tfidf__smooth_idf': (True, False), # do not use
-        # 'features__vect_based_feat__tfidf__sublinear_tf': (True, False) # do not use
     }
 
     grid_results = run_grid_search(X=X_train,
