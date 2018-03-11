@@ -458,8 +458,10 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
         """
 
         if self.word_embeddings_dict is None:
+            logger.info('Loading word embeddings for {} dimensions'.format(self.embedding_dimensions))
             word_embeddings = WordEmbedding.get_word_embeddings(dimension=self.embedding_dimensions)
         else:
+            logger.info('Loading pre loaded word embeddings for {} dimensions'.format(self.embedding_dimensions))
             word_embeddings = self.word_embeddings_dict.get(self.embedding_dimensions)
 
         if self.embedding_type == 'tf':

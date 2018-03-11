@@ -15,7 +15,7 @@ def setup_logger(name):
         '%(asctime)s - PID:%(process)d - %(name)s.py:%(funcName)s:%(lineno)d - %(levelname)s - %(message)s')
 
     logger = logging.getLogger(name)
-    logger.setLevel(logging.ERROR)
+    logger.setLevel(logging.INFO)
 
     # create INFO file handler
     file_handler = handlers.RotatingFileHandler('{}.log'.format(name),
