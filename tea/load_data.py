@@ -10,6 +10,9 @@ from tea import DATA_DIR, setup_logger
 
 logger = setup_logger(__name__)
 
+TRAIN_FILE = 'ABSA16_Laptops_Train_SB1_v2.xml'
+TEST_FILE = 'EN_LAPT_SB1_TEST_.xml.gold'
+
 
 def calculate_label_ratio(labels):
     """
@@ -28,7 +31,7 @@ def calculate_label_ratio(labels):
         print('Label: {}, Instances: {}, Ratio: {}%'.format(t[0], t[1], ratio))
 
 
-def parse_reviews(file='ABSA16_Laptops_Train_SB1_v2.xml',
+def parse_reviews(file=TRAIN_FILE,
                   save_data=True,
                   load_data=True):
     """
@@ -36,12 +39,10 @@ def parse_reviews(file='ABSA16_Laptops_Train_SB1_v2.xml',
     :param file: str. the name of the of the file that stores the data
     :param save_data: bool. whether the extracted data will be saved
     :param load_data: bool. whether the extracted data should be loaded
-    :return: pandas dataframe with 2 columns: polarity, text
+    :return: pandas data-frame with 2 columns: polarity, text
     """
     path = "{}{}".format(DATA_DIR, file)
-    # path = "C:\\Users\\giorg\\Downloads\\AUEB\\Text Analytics\\Assignments\\Assignment2\\reviews-classification\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
-    # path = "C:\\Users\\m.nikoloudaki.SIEBEN\\OneDrive\\Documents\\DataScience MSc\\Text Engineering and Analytics\\Assignment2\\data\\ABSA16_Laptops_Train_SB1_v2.xml"
-
+    print(path)
     if load_data:
         try:
             x = path.split('.')[-1]
@@ -60,20 +61,16 @@ def parse_reviews(file='ABSA16_Laptops_Train_SB1_v2.xml',
     reviews = soup.body.reviews
 
     for body_child in reviews:
-
         if isinstance(body_child, Tag):
-
             for body_child_2 in body_child.sentences:
-
                 if isinstance(body_child_2, Tag):
-
-                    opinions = body_child_2.opinions
-
-                    # keeping only reviews that have a polarity
-                    if opinions:
-                        sentence = body_child_2.text.strip()
-                        polarity = opinions.opinion.attrs.get('polarity')
-                        data.append({'text': sentence, 'polarity': polarity})
+                    if body_child_2.opinions:
+                        opinion = body_child_2.opinions.opinion
+                        # keeping only reviews that have a polarity
+                        if opinion:
+                            sentence = body_child_2.text.strip()
+                            polarity = opinion.attrs.get('polarity')
+                            data.append({'text': sentence, 'polarity': polarity})
 
     extracted_data = pd.DataFrame(data)
     extracted_data = extracted_data[extracted_data['polarity'] != 'neutral']
@@ -152,7 +149,7 @@ def get_df_stratified_split_in_train_validation(data,
 
 
 if __name__ == "__main__":
-    mydata = parse_reviews(load_data=False, save_data=False)
-    print(mydata.head())
+    train_data = parse_reviews(load_data=False, save_data=False, file=TEST_FILE)
+    print(train_data.head())
 
-    calculate_label_ratio(mydata['polarity'])
+    calculate_label_ratio(train_data['polarity'])
