@@ -31,18 +31,22 @@ def calculate_label_ratio(labels):
         print('Label: {}, Instances: {}, Ratio: {}%'.format(t[0], t[1], ratio))
 
 
-def parse_reviews(file=TRAIN_FILE,
+def parse_reviews(file_type='train',
                   save_data=True,
                   load_data=True):
     """
 
-    :param file: str. the name of the of the file that stores the data
+    :param file_type: str. the file type. Enum between 'train' and 'test'
     :param save_data: bool. whether the extracted data will be saved
     :param load_data: bool. whether the extracted data should be loaded
     :return: pandas data-frame with 2 columns: polarity, text
     """
+    assert file_type in ['train', 'test']
+
+    file = TRAIN_FILE if file_type == 'train' else TEST_FILE
+
     path = "{}{}".format(DATA_DIR, file)
-    print(path)
+
     if load_data:
         try:
             x = path.split('.')[-1]
@@ -75,7 +79,7 @@ def parse_reviews(file=TRAIN_FILE,
     extracted_data = pd.DataFrame(data)
     extracted_data = extracted_data[extracted_data['polarity'] != 'neutral']
     if save_data:
-        logger.info('Saving etracted reviews metadata from file: {}'.format(file))
+        logger.info('Saving etracted reviews metadata from file: {}'.format(file_type))
         x = path.split('.')[-1]
         outfile = re.sub(x, 'csv', path)
         extracted_data.to_csv(outfile, encoding='utf-8', index=False)
@@ -149,7 +153,7 @@ def get_df_stratified_split_in_train_validation(data,
 
 
 if __name__ == "__main__":
-    train_data = parse_reviews(load_data=False, save_data=False, file=TEST_FILE)
+    train_data = parse_reviews(load_data=False, save_data=False, file_type='train')
     print(train_data.head())
 
     calculate_label_ratio(train_data['polarity'])
