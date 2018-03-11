@@ -8,7 +8,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from tqdm import tqdm
 
 from tea import setup_logger, NEGATIVE_WORDS, POSITIVE_WORDS, CONTRACTION_MAP
-from tea.load_data import parse_reviews
 from tea.text_mining import tokenize_text
 from tea.word_embedding import WordEmbedding
 
@@ -636,27 +635,3 @@ class LemmaExtractor(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
         return self
-
-
-if __name__ == "__main__":
-    mydata = parse_reviews(load_data=True, save_data=True)
-
-    obj = SentenceEmbeddingExtractor(embedding_dimensions=50,
-                                     col_name='text',
-                                     embedding_type='tfidf',
-                                     embedding_output='vector')
-
-    doc_embeddings = obj.fit_transform(X=mydata)
-
-    print(doc_embeddings)
-    print(doc_embeddings.shape)
-
-    obj = SentenceEmbeddingExtractor(embedding_dimensions=50,
-                                     col_name='text',
-                                     embedding_type='tfidf',
-                                     embedding_output='centroid')
-
-    doc_embeddings = obj.fit_transform(X=mydata)
-
-    print(doc_embeddings)
-    print(doc_embeddings.shape)
