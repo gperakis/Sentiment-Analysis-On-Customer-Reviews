@@ -32,7 +32,7 @@ if __name__ == "__main__":
                 ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative')),
                 ('contains_uppercase', ContainsUppercaseWords(col_name='text', reshape=True))])),
             # ('scaling', StandardScaler()),
-            ('scaling', MinMaxScaler()),
+            ('scaling', StandardScaler()),
             # ('pca', PCA()),
             # ('clf', SVC()),
             # ('clf', MultinomialNB())
@@ -53,7 +53,8 @@ if __name__ == "__main__":
         # 'clf__n_neighbors': (3, 4, 5, 6, 7, 8),  # k-NN
         # 'clf__learning_rate': (0.1, 0.01, 0.001),  # Gradient Boosting
         # 'clf__n_estimators': (100, 300, 600),  # Gradient Boosting, Random Forest
-        # 'clf__alpha': (0.5, 1.0),  # MultinomialNB
+        # 'clf__alpha': (0.1, 0.5, 1.0),  # MultinomialNB
+        # 'clf__fit_prior': (True, False),  # MultinomialNB
         # 'clf__max_depth': [10, 50, 100, None],  # Random Forest
     }
 

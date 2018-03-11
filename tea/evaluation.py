@@ -224,29 +224,30 @@ def create_benchmark_plot(train_X,
     return results
 
 
-def prec_recall_multi(n_classes, X_test, Y_test, fittedclf):
+def prec_recall_multi(n_classes, X_test, Y_test, fitted_clf):
     """
 
     :param n_classes: int. the number of classes of the data
     :param X_test: list
-    :param y_test: list
-    :param fitedclf: fitted classifier
+    :param Y_test: list
+    :param fited_clf: fitted classifier
     :return: 3 dictionaries for precision recall, average_precision
     """
-    y_score = fittedclf.decision_function(X_test)
+    y_score = fitted_clf.decision_function(X_test)
     precision = dict()
     recall = dict()
     average_precision = dict()
+
+    print(y_score.shape)
+
     for i in range(n_classes):
-        precision[i], recall[i], _ = precision_recall_curve(Y_test[:, i],
-                                                            y_score[:, i])
+        precision[i], recall[i], _ = precision_recall_curve(Y_test[:, i], y_score[:, i])
         average_precision[i] = average_precision_score(Y_test[:, i], y_score[:, i])
 
     # A "micro-average": quantifying score on all classes jointly
-    precision["micro"], recall["micro"], _ = precision_recall_curve(Y_test.ravel(),
-                                                                    y_score.ravel())
-    average_precision["micro"] = average_precision_score(Y_test, y_score,
-                                                         average="micro")
+    precision["micro"], recall["micro"], _ = precision_recall_curve(Y_test.ravel(), y_score.ravel())
+
+    average_precision["micro"] = average_precision_score(Y_test, y_score, average="micro")
     return precision, recall, average_precision
 
 
@@ -261,18 +262,16 @@ def plot_micro_prec_recall(precision, recall, average_precision):
     sns.set()
     sns.set_style("dark")
     plt.figure()
-    plt.step(recall['micro'], precision['micro'], color='b', alpha=0.2,
-             where='post')
-    plt.fill_between(recall["micro"], precision["micro"], step='post', alpha=0.2,
-                     color='b')
+    plt.step(recall['micro'], precision['micro'], color='b', alpha=0.2, where='post')
+    plt.fill_between(recall["micro"], precision["micro"], step='post', alpha=0.2, color='b')
 
     plt.xlabel('Recall', fontsize=18)
     plt.ylabel('Precision', fontsize=18)
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-    plt.title(
-        'Average precision score, micro-averaged over all classes: AP={0:0.2f}'
-            .format(average_precision["micro"]), fontsize=24)
+    plt.title('Average precision score, micro-averaged over all classes: AP={0:0.2f}'.format(
+        average_precision["micro"]),
+        fontsize=24)
 
     plt.show()
 
@@ -314,8 +313,7 @@ def plot_micro_prec_recall_per_class(n_classes, precision, recall, average_preci
     for i, color in zip(range(n_classes), colors):
         l, = plt.plot(recall[i], precision[i], color=color, lw=2)
         lines.append(l)
-        labels.append('Precision-recall for class {0} (area = {1:0.2f})'
-                      ''.format(i, average_precision[i]))
+        labels.append('Precision-recall for class {0} (area = {1:0.2f})'.format(i, average_precision[i]))
 
     fig = plt.gcf()
     fig.subplots_adjust(bottom=0.25)
@@ -344,6 +342,7 @@ def compute_roc_curve_area(n_classes, X_test, y_test, fittedclf):
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
+
     for i in range(n_classes):
         fpr[i], tpr[i], _ = metrics.roc_curve(y_test[:, i], y_score[:, i])
         roc_auc[i] = metrics.auc(fpr[i], tpr[i])
