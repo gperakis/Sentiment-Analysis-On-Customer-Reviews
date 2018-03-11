@@ -1,15 +1,20 @@
+from itertools import cycle
+
+import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib.font_manager import FontProperties
+from scipy import interp
+from sklearn import metrics
+from sklearn import svm, datasets
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_auc_score, \
     precision_recall_curve, average_precision_score
-import pandas as pd
-from sklearn import metrics, svm, datasets
-import matplotlib.pylab as plt
-from matplotlib.font_manager import FontProperties
-from sklearn.preprocessing import MinMaxScaler, label_binarize
+from sklearn.metrics import roc_curve
 from sklearn.model_selection import train_test_split
-import numpy as np
-from itertools import cycle
-import seaborn as sns
-from scipy import interp
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import label_binarize
 
 plt.rcParams['figure.figsize'] = (16, 8)
 
@@ -238,7 +243,6 @@ def prec_recall_multi(n_classes, X_test, Y_test, fitted_clf):
     recall = dict()
     average_precision = dict()
 
-
     for i in range(n_classes):
         precision[i], recall[i], _ = precision_recall_curve(Y_test[:, i], y_score[:, i])
         average_precision[i] = average_precision_score(Y_test[:, i], y_score[:, i])
@@ -436,6 +440,34 @@ def plot_roc_multi(fpr, tpr, roc_auc, n_classes):
     plt.ylabel('True Positive Rate')
     plt.title('Some extension of Receiver operating characteristic to multi-class')
     plt.legend(loc="lower right")
+    plt.show()
+
+
+def plot_roc_binary(X, y, fitted_clf):
+    """
+
+    :param X:
+    :param y:
+    :param fitted_clf:
+    :return:
+    """
+    logit_roc_auc = roc_auc_score(y, fitted_clf.predict(X))
+
+    fpr, tpr, thresholds = roc_curve(y, fitted_clf.predict_proba(X)[:, 1])
+
+    plt.figure()
+    plt.plot(fpr, tpr, label='Logistic Regression (area = %0.2f)' % logit_roc_auc)
+    plt.plot([0, 1], [0, 1], 'r--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right")
+
+    plt.savefig('Log_ROC')
     plt.show()
 
 

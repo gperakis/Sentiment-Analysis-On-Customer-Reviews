@@ -4,7 +4,7 @@ from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 
-from tea.evaluation import create_clf_report, create_benchmark_plot
+from tea.evaluation import create_clf_report, create_benchmark_plot, plot_roc_binary
 from tea.features import *
 from tea.load_data import parse_reviews
 
@@ -16,9 +16,9 @@ if __name__ == "__main__":
     X_train = train_data.drop(['polarity'], axis=1)
     X_test = test_data.drop(['polarity'], axis=1)
 
-    y_train = train_data['polarity']
-
-    y_test = test_data['polarity']
+    le = LabelEncoder()
+    y_train = le.fit_transform(train_data['polarity'])
+    y_test = le.transform(test_data['polarity'])
 
     X_train_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_train))
     X_test_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_test))
@@ -77,3 +77,8 @@ if __name__ == "__main__":
                           test_y=y_test,
                           clf=benchmark_clf,
                           min_y_lim=0)
+
+    benchmark_clf.fit(X=X_train_benchmark, y=y_train)
+
+    plot_roc_binary(X=X_train_benchmark, y=y_train, fitted_clf=benchmark_clf)
+    plot_roc_binary(X=X_test_benchmark, y=y_test, fitted_clf=benchmark_clf)
