@@ -18,28 +18,32 @@ if __name__ == "__main__":
 
     X_train_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_train))
 
-    user_based_features = FeatureUnion(transformer_list=[
-        ('text_length', TextLengthExtractor(col_name='text', reshape=True)),
-        ('avg_token_length', WordLengthMetricsExtractor(col_name='text', metric='avg',
-                                                        split_type='simple', reshape=True)),
-        ('std_token_length', WordLengthMetricsExtractor(col_name='text', metric='std',
-                                                        split_type='simple', reshape=True)),
-        ('contains_spc', ContainsSpecialCharactersExtractor(col_name='text', reshape=True)),
-        ('n_tokens', NumberOfTokensCalculator(col_name='text', reshape=True)),
-        ('contains_dots_bool', ContainsSequentialChars(col_name='text', pattern='..', reshape=True)),
-        ('contains_excl_bool', ContainsSequentialChars(col_name='text', pattern='!!', reshape=True)),
-        ('sentiment_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive', reshape=True)),
-        ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative', reshape=True)),
-        ('contains_uppercase', ContainsUppercaseWords(col_name='text', reshape=True))])
+    we_obj = WordEmbedding()
+
+    pre_loaded_we = {
+        # 50: we_obj.get_word_embeddings(dimension=50),
+        # 100: we_obj.get_word_embeddings(dimension=100),
+        # 200: we_obj.get_word_embeddings(dimension=200),
+        300: we_obj.get_word_embeddings(dimension=300)
+    }
 
     final_pipeline = Pipeline(
         [
             ('features', FeatureUnion(transformer_list=[
-                ('user_based_feat', user_based_features),
-                ('embedding_feat', SentenceEmbeddingExtractor(col_name='text'))
+                ('text_length', TextLengthExtractor(col_name='text')),
+                ('avg_token_length', WordLengthMetricsExtractor(col_name='text', metric='avg', split_type='simple')),
+                ('std_token_length', WordLengthMetricsExtractor(col_name='text', metric='std', split_type='simple')),
+                ('contains_spc', ContainsSpecialCharactersExtractor(col_name='text')),
+                ('n_tokens', NumberOfTokensCalculator(col_name='text')),
+                ('contains_dots_bool', ContainsSequentialChars(col_name='text', pattern='..')),
+                ('contains_excl_bool', ContainsSequentialChars(col_name='text', pattern='!!')),
+                ('sentiment_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive')),
+                ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative')),
+                ('contains_uppercase', ContainsUppercaseWords(col_name='text', reshape=True)),
+                ('embedding_feat', SentenceEmbeddingExtractor(col_name='text', word_embeddings_dict=pre_loaded_we))
             ])),
+            # ('scaling', StandardScaler()),
             ('scaling', StandardScaler()),
-            # ('scaling', MinMaxScaler()),
             # ('pca', PCA()),
             # ('clf', SVC()),
             # ('clf', MultinomialNB())
@@ -50,11 +54,11 @@ if __name__ == "__main__":
         ])
 
     params = {
-        'features__user_based_feat__sentiment_positive__count_type': ['boolean', 'counts'],
-        'features__user_based_feat__sentiment_negative__count_type': ['boolean', 'counts'],
-        'features__user_based_feat__contains_uppercase__how': ['bool', 'count'],
-        'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
-        'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300],  # embedding
+        'features__sentiment_positive__count_type': ['counts', ],  # 'boolean',
+        'features__sentiment_negative__count_type': ['counts', ],  # 'boolean',
+        'features__contains_uppercase__how': ['count', ],  # 'bool',
+        'features__embedding_feat__embedding_type': ['tf'],  # embedding # 'tfidf',
+        'features__embedding_feat__embedding_dimensions': [300, ],  # embedding  100, 200, 300
         'clf__penalty': ('l1', 'l2'),  # Logistic
         # 'clf__kernel': ('rbf', 'linear'),  # SVM
         # 'clf__gamma': (0.1, 0.01, 0.001, 0.0001),  # SVM
@@ -62,7 +66,8 @@ if __name__ == "__main__":
         # 'clf__n_neighbors': (3, 4, 5, 6, 7, 8),  # k-NN
         # 'clf__learning_rate': (0.1, 0.01, 0.001),  # Gradient Boosting
         # 'clf__n_estimators': (100, 300, 600),  # Gradient Boosting, Random Forest
-        # 'clf__alpha': (0.5, 1.0),  # MultinomialNB
+        # 'clf__alpha': (0.1, 0.5, 1.0),  # MultinomialNB
+        # 'clf__fit_prior': (True, False),  # MultinomialNB
         # 'clf__max_depth': [10, 50, 100, None],  # Random Forest
     }
 
