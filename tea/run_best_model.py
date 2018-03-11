@@ -5,15 +5,20 @@ from sklearn.preprocessing import StandardScaler
 
 from tea.features import *
 from tea.load_data import parse_reviews
-from tea.run_models import run_grid_search
+from tea.evaluation import create_clf_report
 
 if __name__ == "__main__":
-    data = parse_reviews(load_data=False)
+    train_data = parse_reviews(load_data=False, file_type='train')
+    test_data = parse_reviews(load_data=False, file_type='test')
 
-    X_train = data.drop(['polarity'], axis=1)
-    y_train = data['polarity']
+    X_train = train_data.drop(['polarity'], axis=1)
+    y_train = train_data['polarity']
+
+    X_test = test_data.drop(['polarity'], axis=1)
+    y_test = test_data['polarity']
 
     X_train_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_train))
+    X_test_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_test))
 
     vect_based_features = Pipeline([('extract', TextColumnExtractor(column='text')),
                                     ('contractions', ContractionsExpander()),
@@ -47,4 +52,6 @@ if __name__ == "__main__":
 
     model = final_pipeline.fit(X=X_train_lemmatized, y=y_train)
 
-    print(model)
+    y_test_pred = model.predict(X_test_lemmatized)
+
+    create_clf_report(y_true=y_test, y_pred=y_test_pred, classes=model.classes_)
