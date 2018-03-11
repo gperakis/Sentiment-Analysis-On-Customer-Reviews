@@ -114,15 +114,20 @@ class WordLengthMetricsExtractor(BaseEstimator, TransformerMixin):
     def __init__(self,
                  col_name,
                  split_type='simple',
-                 metric='avg'):
+                 metric='avg',
+                 reshape=False):
         """
 
+        :param col_name:
         :param split_type:
+        :param metric:
+        :param reshape:
         """
         assert metric in ['avg', 'std']
         self.split_type = split_type
         self.col_name = col_name
         self.metric = metric
+        self.reshape = reshape
 
     def calculate_metric(self, words):
         """
@@ -149,7 +154,12 @@ class WordLengthMetricsExtractor(BaseEstimator, TransformerMixin):
             logger.info('Calculating {} for "{}" Column'.format(self.metric, self.col_name))
             x = X[self.col_name].apply(lambda s: tokenize_text(text=s, split_type=self.split_type))
 
-        return x.apply(self.calculate_metric)
+        out = x.apply(self.calculate_metric)
+
+        if self.reshape:
+            return out.values.reshape(-1, 1)
+
+        return out
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
@@ -159,20 +169,28 @@ class WordLengthMetricsExtractor(BaseEstimator, TransformerMixin):
 class TextLengthExtractor(BaseEstimator, TransformerMixin):
     """Takes in dataframe, extracts text column, returns sentence's length"""
 
-    def __init__(self, col_name):
+    def __init__(self, col_name, reshape=False):
         """
 
         :param col_name:
+        :param reshape:
         """
         self.col_name = col_name
+        self.reshape = reshape
 
     def transform(self, X, y=None):
         if X is None:
             logger.info('Calculating text length for "{}" Column'.format(self.col_name))
-            return X.apply(len)
+            out = X.apply(len)
 
-        logger.info('Calculating text length for "{}" Column'.format(self.col_name))
-        return X[self.col_name].apply(len)
+        else:
+            logger.info('Calculating text length for "{}" Column'.format(self.col_name))
+            out = X[self.col_name].apply(len)
+
+        if self.reshape:
+            return out.values.reshape(-1, 1)
+
+        return out
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
@@ -180,22 +198,29 @@ class TextLengthExtractor(BaseEstimator, TransformerMixin):
 
 
 class ContainsSpecialCharactersExtractor(BaseEstimator, TransformerMixin):
-    def __init__(self, col_name):
+    def __init__(self, col_name, reshape=False):
         """
         This class checks whether there are some given special characters in a text.
         :param col_name:
         """
         self.col_name = col_name
         self.SPECIAL_CHARACTERS = set("!@#$%^&*()_+-=")
+        self.reshape = reshape
 
     def transform(self, X, y=None):
 
         logger.info('Checking whether text contains special characters for "{}" Column'.format(self.col_name))
 
         if X is None:
-            return X.apply(lambda s: bool(set(s) & self.SPECIAL_CHARACTERS))
+            out = X.apply(lambda s: bool(set(s) & self.SPECIAL_CHARACTERS))
 
-        return X[self.col_name].apply(lambda s: bool(set(s) & self.SPECIAL_CHARACTERS))
+        else:
+            out = X[self.col_name].apply(lambda s: bool(set(s) & self.SPECIAL_CHARACTERS))
+
+        if self.reshape:
+            return out.values.reshape(-1, 1)
+
+        return out
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
@@ -207,22 +232,30 @@ class ContainsSequentialChars(BaseEstimator, TransformerMixin):
     Checks if special character patterns appear in the sentence.
     """
 
-    def __init__(self, col_name, pattern="..."):
+    def __init__(self, col_name, pattern="...", reshape=False):
         """
         This class checks whether there are some given special characters in a text.
+
         :param col_name:
         """
         self.col_name = col_name
         self.pattern = pattern
+        self.reshape = reshape
 
     def transform(self, X, y=None):
 
         logger.info('Checking whether text contains special characters for "{}" Column'.format(self.col_name))
 
         if X is None:
-            X.apply(lambda s: bool(self.pattern in s))
+            out = X.apply(lambda s: bool(self.pattern in s))
 
-        return X[self.col_name].apply(lambda s: bool(self.pattern in s))
+        else:
+            out = X[self.col_name].apply(lambda s: bool(self.pattern in s))
+
+        if self.reshape:
+            return out.values.reshape(-1, 1)
+
+        return out
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
@@ -232,7 +265,7 @@ class ContainsSequentialChars(BaseEstimator, TransformerMixin):
 class ContainsUppercaseWords(BaseEstimator, TransformerMixin):
     """Takes in data-frame, extracts number of tokens in text"""
 
-    def __init__(self, col_name=None, how='bool'):
+    def __init__(self, col_name=None, how='bool', reshape=False):
         """
 
         :param col_name:
@@ -241,6 +274,7 @@ class ContainsUppercaseWords(BaseEstimator, TransformerMixin):
         assert how in ['bool', 'count']
         self.col_name = col_name
         self.how = how
+        self.reshape = reshape
 
     def calculate_uppercase_words_in_tokens(self, sentence):
         """
@@ -264,10 +298,16 @@ class ContainsUppercaseWords(BaseEstimator, TransformerMixin):
 
         if self.col_name is None:
             logger.info('Checking if text contains uppercase words for pandas series')
-            return X.apply(self.calculate_uppercase_words_in_tokens)
+            out = X.apply(self.calculate_uppercase_words_in_tokens)
 
-        logger.info('Checking if text contains uppercase words for "{}" Column'.format(self.col_name))
-        return X[self.col_name].apply(self.calculate_uppercase_words_in_tokens)
+        else:
+            logger.info('Checking if text contains uppercase words for "{}" Column'.format(self.col_name))
+            out = X[self.col_name].apply(self.calculate_uppercase_words_in_tokens)
+
+        if self.reshape:
+            return out.values.reshape(-1, 1)
+
+        return out
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
@@ -277,19 +317,26 @@ class ContainsUppercaseWords(BaseEstimator, TransformerMixin):
 class NumberOfTokensCalculator(BaseEstimator, TransformerMixin):
     """Takes in dataframe, extracts number of tokens in text"""
 
-    def __init__(self, col_name):
+    def __init__(self, col_name, reshape=False):
         """
         :param col_name:
         """
         self.col_name = col_name
+        self.reshape = reshape
 
     def transform(self, X, y=None):
         logger.info('Counting number of tokens for "{}" Column'.format(self.col_name))
 
         if X is None:
-            return X.apply(lambda x: len(tokenize_text(x, split_type='thorough')))
+            out = X.apply(lambda x: len(tokenize_text(x, split_type='thorough')))
 
-        return X[self.col_name].apply(lambda x: len(tokenize_text(x, split_type='thorough')))
+        else:
+            out = X[self.col_name].apply(lambda x: len(tokenize_text(x, split_type='thorough')))
+
+        if self.reshape:
+            return out.values.reshape(-1, 1)
+
+        return out
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
@@ -303,7 +350,8 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
                  col_name,
                  count_type='boolean',
                  input_type='text',
-                 sentiment='negative'):
+                 sentiment='negative',
+                 reshape=False):
         """
         :param col_name:
         """
@@ -315,6 +363,7 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
         self.sentiment = sentiment
         self.input_type = input_type
         self.count_type = count_type
+        self.reshape = reshape
 
         if self.sentiment == 'positive':
 
@@ -358,16 +407,21 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
         logger.info('Searching for {} sentiment of tokens for "{}" Column'.format(self.sentiment, self.col_name))
 
         if X is None and self.count_type == 'boolean':
-            return X.apply(self.calculate_boolean_output)
+            out = X.apply(self.calculate_boolean_output)
 
         elif X is None and self.count_type == 'counts':
-            return X.apply(self.calculate_counts_output)
+            out = X.apply(self.calculate_counts_output)
 
         elif self.count_type == 'boolean':
-            return X[self.col_name].apply(self.calculate_boolean_output)
+            out = X[self.col_name].apply(self.calculate_boolean_output)
 
         else:
-            return X[self.col_name].apply(self.calculate_counts_output)
+            out = X[self.col_name].apply(self.calculate_counts_output)
+
+        if self.reshape:
+            return out.values.reshape(-1, 1)
+
+        return out
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
@@ -380,7 +434,6 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
     def __init__(self,
                  col_name=None,
                  embedding_type='tf',
-                 embedding_output='centroid',
                  embedding_dimensions=50):
         """
 
@@ -390,11 +443,9 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
         :param embedding_dimensions:
         """
         assert embedding_type in ['tf', 'tfidf']
-        assert embedding_output in ['centroid', 'vector']
 
         self.col_name = col_name
         self.embedding_dimensions = embedding_dimensions
-        self.embedding_output = embedding_output
         self.embedding_type = embedding_type
 
     def calculate_updated_sentence_embeddings(self, X):
@@ -471,106 +522,14 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
 
         return np.vstack(embedded_vectors_updated)
 
-    def calculate_centroid_sentence_embeddings(self, X):
-        """
-
-        :param X:
-        :return:
-        """
-
-        # getting the precalculated embedding vector avg centroid (constant value. Not a vector)
-        centroid_word_embeddings = WordEmbedding.get_word_embeddings_mean(dimension=self.embedding_dimensions,
-                                                                          save_data=False,
-                                                                          load_data=True)
-
-        if self.embedding_type == 'tf':
-
-            # setting the vectorizer
-            vectorizer = CountVectorizer(strip_accents='unicode',
-                                         analyzer='word',
-                                         ngram_range=(1, 1),
-                                         stop_words=None,
-                                         lowercase=True,
-                                         binary=False)
-
-        elif self.embedding_type == 'tfidf':
-            # setting the vectorizer
-            vectorizer = TfidfVectorizer(strip_accents='unicode',
-                                         analyzer='word',
-                                         ngram_range=(1, 1),
-                                         stop_words=None,
-                                         lowercase=True,
-                                         binary=False,
-                                         norm='l2',
-                                         use_idf=True,
-                                         smooth_idf=True)
-
-        else:
-            raise NotImplementedError()
-
-        # transforming the docs in order to calculate the tf-idfs.
-        X_transformed = vectorizer.fit_transform(X)
-
-        # getting the analyser and the vocabulary in order to get the tokens and the indices of the tokens in
-        # the aforementioned matrix.
-        analyser = vectorizer.build_analyzer()
-        vocabulary_indices = vectorizer.vocabulary_
-
-        centroid_values_updated = list()
-
-        for index_row, doc in enumerate(tqdm(X, unit=' Document')):
-            sum_w_e = 0
-            sum_of_tf_or_idfs = 0
-
-            # breaks test in tokens.
-            doc_tokens = analyser(doc)
-
-            # We keep only the unique ones in order to get the tf-idf values from the stored matrix X_transformed.
-            for token in set(doc_tokens):
-                # get column index from the vocabulary in order to find the exact spot in the X_transformed matrix
-                index_col = vocabulary_indices[token]
-
-                # Getting the tf or idf value for the given word from the transformed matrix
-                token_tf_or_idf_value = X_transformed[index_row, index_col]
-
-                # Extracting the mean (centroid) value of the vector
-                token_centroid = centroid_word_embeddings.get(token, 0)
-
-                # Getting the product of the idf and centroid
-                sum_w_e += (token_tf_or_idf_value * token_centroid)
-
-                sum_of_tf_or_idfs += token_tf_or_idf_value
-
-            doc_final_value = sum_w_e / float(sum_of_tf_or_idfs)
-
-            centroid_values_updated.append(doc_final_value)
-
-        return np.array(centroid_values_updated)
-
-    def get_updated_embeddings(self, X):
-        """
-
-        :return:
-        """
-        if self.embedding_output == 'centroid':
-            return self.calculate_centroid_sentence_embeddings(X)
-
-        elif self.embedding_output == 'vector':
-            return self.calculate_updated_sentence_embeddings(X)
-
-        else:
-            raise NotImplementedError()
-
     def transform(self, X, y=None):
 
         if self.col_name is None:
             logger.info('Calculating word embeddings of sentences for pandas series')
-            # return X.apply(lambda x: self.calculate_sentence_word_embedding(x))
-            return self.get_updated_embeddings(X=X)
+            return self.calculate_updated_sentence_embeddings(X=X)
 
         logger.info('Calculating word embeddings of sentences for "{}" Column'.format(self.col_name))
-        # return X[self.col_name].apply(lambda x: self.calculate_sentence_word_embedding(x))
-        return self.get_updated_embeddings(X=X[self.col_name])
+        return self.calculate_updated_sentence_embeddings(X=X[self.col_name])
 
     def fit(self, X, y=None):
         """Returns `self` unless something different happens in train and test"""
