@@ -152,7 +152,7 @@ def get_df_stratified_split_in_train_validation(data,
 
 
 if __name__ == "__main__":
-    mydata = parse_reviews(load_data=True, save_data=False)
+    mydata = parse_reviews(load_data=False, save_data=False)
     print(mydata.head())
 
     calculate_label_ratio(mydata['polarity'])

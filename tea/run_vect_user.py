@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.pipeline import FeatureUnion, Pipeline
-from sklearn.preprocessing import Normalizer, StandardScaler
+from sklearn.preprocessing import Normalizer, StandardScaler, MinMaxScaler
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -27,34 +27,31 @@ if __name__ == "__main__":
 
     user_based_features = FeatureUnion(transformer_list=[
         ('text_length', TextLengthExtractor(col_name='text', reshape=True)),
-        ('avg_token_length', WordLengthMetricsExtractor(col_name='text', metric='avg',
-                                                        split_type='simple', reshape=True)),
-        ('std_token_length', WordLengthMetricsExtractor(col_name='text', metric='std',
-                                                        split_type='simple', reshape=True)),
-        ('contains_spc', ContainsSpecialCharactersExtractor(col_name='text', reshape=True)),
-        ('n_tokens', NumberOfTokensCalculator(col_name='text', reshape=True)),
-        ('contains_dots_bool', ContainsSequentialChars(col_name='text', pattern='..', reshape=True)),
-        ('contains_excl_bool', ContainsSequentialChars(col_name='text', pattern='!!', reshape=True)),
-        ('sentiment_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive', reshape=True)),
-        ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative', reshape=True)),
-        ('contains_uppercase', ContainsUppercaseWords(col_name='text', reshape=True))])
+        ('avg_token_length', WordLengthMetricsExtractor(col_name='text', metric='avg', split_type='simple')),
+        ('std_token_length', WordLengthMetricsExtractor(col_name='text', metric='std', split_type='simple')),
+        ('contains_spc', ContainsSpecialCharactersExtractor(col_name='text')),
+        ('n_tokens', NumberOfTokensCalculator(col_name='text')),
+        ('contains_dots_bool', ContainsSequentialChars(col_name='text', pattern='..')),
+        ('contains_excl_bool', ContainsSequentialChars(col_name='text', pattern='!!')),
+        ('sentiment_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive')),
+        ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative')),
+        ('contains_uppercase', ContainsUppercaseWords(col_name='text'))])
 
-    final_pipeline = Pipeline(
-        [
-            ('features', FeatureUnion(transformer_list=[
-                ('vect_based_feat', vect_based_features),
-                ('user_based_feat', user_based_features),
-            ])),
-            ('scaling', StandardScaler()),
-            # ('scaling', MinMaxScaler()),
-            # ('pca', PCA()),
-            # ('clf', SVC()),
-            # ('clf', MultinomialNB())
-            ('clf', LogisticRegression())
-            # ('clf', KNeighborsClassifier())
-            # ('clf', GradientBoostingClassifier())
-            # ('clf', RandomForestClassifier())
-        ])
+    final_pipeline = Pipeline([
+        ('features', FeatureUnion(transformer_list=[
+            ('vect_based_feat', vect_based_features),
+            ('user_based_feat', user_based_features)]
+        )),
+        ('scaling', StandardScaler()),
+        # ('scaling', MinMaxScaler()),
+        # ('pca', PCA()),
+        # ('clf', SVC()),
+        # ('clf', MultinomialNB())
+        ('clf', LogisticRegression())
+        # ('clf', KNeighborsClassifier())
+        # ('clf', GradientBoostingClassifier())
+        # ('clf', RandomForestClassifier())
+    ])
 
     params = {
         'features__user_based_feat__sentiment_positive__count_type': ['boolean', 'counts'],
