@@ -1,25 +1,24 @@
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import FeatureUnion, Pipeline
-from sklearn.preprocessing import StandardScaler
-from tea.features import *
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+
+from tea.evaluation import create_clf_report, create_benchmark_plot
+from tea.features import *
 from tea.load_data import parse_reviews
-from tea.evaluation import create_clf_report, prec_recall_multi, plot_micro_prec_recall, \
-    plot_micro_prec_recall_per_class, compute_roc_curve_area, plot_roc_multi
-from sklearn.multiclass import OneVsRestClassifier
+
 if __name__ == "__main__":
+
     train_data = parse_reviews(load_data=False, file_type='train')
     test_data = parse_reviews(load_data=False, file_type='test')
-
-    le = LabelEncoder()
 
     X_train = train_data.drop(['polarity'], axis=1)
     X_test = test_data.drop(['polarity'], axis=1)
 
-    y_train = le.fit_transform(train_data['polarity'])
+    y_train = train_data['polarity']
 
-    y_test = le.transform(test_data['polarity'])
+    y_test = test_data['polarity']
 
     X_train_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_train))
     X_test_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_test))
@@ -53,6 +52,13 @@ if __name__ == "__main__":
         # ('pca', PCA()),
         ('clf', LogisticRegression(C=0.1))])
 
+    final_pipeline_without_clf = Pipeline([
+        ('features', FeatureUnion(transformer_list=[
+            ('vect_based_feat', vect_based_features),
+            ('user_based_feat', user_based_features)]
+        )),
+        ('scaling', StandardScaler())])
+
     fitted_model = final_pipeline.fit(X=X_train_lemmatized, y=y_train)
 
     y_test_pred = fitted_model.predict(X_test_lemmatized)
@@ -61,25 +67,13 @@ if __name__ == "__main__":
                       y_pred=y_test_pred,
                       classes=fitted_model.classes_)
 
-    prec, recall, av_prec = prec_recall_multi(n_classes=2,
-                                              X_test=X_test_lemmatized,
-                                              Y_test=y_test,
-                                              fitted_clf=fitted_model)
+    X_train_benchmark = final_pipeline_without_clf.fit_transform(X_train_lemmatized)
+    X_test_benchmark = final_pipeline_without_clf.transform(X_test_lemmatized)
+    benchmark_clf = LogisticRegression(C=0.1)
 
-    print('Average precision score, micro-averaged over all classes: {0:0.2f}'.format(av_prec["micro"]))
-
-    plot_micro_prec_recall(precision=prec,
-                           recall=recall,
-                           average_precision=av_prec)
-
-    plot_micro_prec_recall_per_class(n_classes=2,
-                                     precision=prec,
-                                     recall=recall,
-                                     average_precision=av_prec)
-
-    fprdict, tprdict, roc_aucdict = compute_roc_curve_area(n_classes=2,
-                                                           X_test=X_test_lemmatized,
-                                                           y_test=y_test,
-                                                           fittedclf=fitted_model)
-
-    plot_roc_multi(fpr=fprdict, tpr=tprdict, roc_auc=roc_aucdict, n_classes=2)
+    create_benchmark_plot(train_X=X_train_benchmark,
+                          train_y=y_train,
+                          test_X=X_test_benchmark,
+                          test_y=y_test,
+                          clf=benchmark_clf,
+                          min_y_lim=0)

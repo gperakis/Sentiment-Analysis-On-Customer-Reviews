@@ -238,7 +238,6 @@ def prec_recall_multi(n_classes, X_test, Y_test, fitted_clf):
     recall = dict()
     average_precision = dict()
 
-    print(y_score.shape)
 
     for i in range(n_classes):
         precision[i], recall[i], _ = precision_recall_curve(Y_test[:, i], y_score[:, i])
