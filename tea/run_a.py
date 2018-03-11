@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.pipeline import FeatureUnion, Pipeline
-from sklearn.preprocessing import Normalizer, StandardScaler
+from sklearn.preprocessing import Normalizer, StandardScaler, MinMaxScaler
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -31,8 +31,8 @@ if __name__ == "__main__":
                 ('sentiment_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive')),
                 ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative')),
                 ('contains_uppercase', ContainsUppercaseWords(col_name='text', reshape=True))])),
-            ('scaling', StandardScaler()),
-            # ('scaling', MinMaxScaler()),
+            # ('scaling', StandardScaler()),
+            ('scaling', MinMaxScaler()),
             # ('pca', PCA()),
             # ('clf', SVC()),
             # ('clf', MultinomialNB())

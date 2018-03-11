@@ -115,7 +115,7 @@ class WordLengthMetricsExtractor(BaseEstimator, TransformerMixin):
                  col_name,
                  split_type='simple',
                  metric='avg',
-                 reshape=False):
+                 reshape=True):
         """
 
         :param col_name:
@@ -169,7 +169,7 @@ class WordLengthMetricsExtractor(BaseEstimator, TransformerMixin):
 class TextLengthExtractor(BaseEstimator, TransformerMixin):
     """Takes in dataframe, extracts text column, returns sentence's length"""
 
-    def __init__(self, col_name, reshape=False):
+    def __init__(self, col_name, reshape=True):
         """
 
         :param col_name:
@@ -198,7 +198,7 @@ class TextLengthExtractor(BaseEstimator, TransformerMixin):
 
 
 class ContainsSpecialCharactersExtractor(BaseEstimator, TransformerMixin):
-    def __init__(self, col_name, reshape=False):
+    def __init__(self, col_name, reshape=True):
         """
         This class checks whether there are some given special characters in a text.
         :param col_name:
@@ -232,7 +232,7 @@ class ContainsSequentialChars(BaseEstimator, TransformerMixin):
     Checks if special character patterns appear in the sentence.
     """
 
-    def __init__(self, col_name, pattern="...", reshape=False):
+    def __init__(self, col_name, pattern="...", reshape=True):
         """
         This class checks whether there are some given special characters in a text.
 
@@ -265,7 +265,7 @@ class ContainsSequentialChars(BaseEstimator, TransformerMixin):
 class ContainsUppercaseWords(BaseEstimator, TransformerMixin):
     """Takes in data-frame, extracts number of tokens in text"""
 
-    def __init__(self, col_name=None, how='bool', reshape=False):
+    def __init__(self, col_name=None, how='bool', reshape=True):
         """
 
         :param col_name:
@@ -317,7 +317,7 @@ class ContainsUppercaseWords(BaseEstimator, TransformerMixin):
 class NumberOfTokensCalculator(BaseEstimator, TransformerMixin):
     """Takes in dataframe, extracts number of tokens in text"""
 
-    def __init__(self, col_name, reshape=False):
+    def __init__(self, col_name, reshape=True):
         """
         :param col_name:
         """
@@ -351,7 +351,7 @@ class HasSentimentWordsExtractor(BaseEstimator, TransformerMixin):
                  count_type='boolean',
                  input_type='text',
                  sentiment='negative',
-                 reshape=False):
+                 reshape=True):
         """
         :param col_name:
         """
