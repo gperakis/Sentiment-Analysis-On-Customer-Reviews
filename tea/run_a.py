@@ -19,34 +19,9 @@ if __name__ == "__main__":
 
     X_train_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_train))
 
-    vect_based_features = Pipeline([('extract', TextColumnExtractor(column='text')),
-                                    ('contractions', ContractionsExpander()),
-                                    ('vect', CountVectorizer()),
-                                    ('tfidf', TfidfTransformer()),
-                                    ('to_dense', DenseTransformer())  # transforms sparse to dense
-                                    ])
-
-    user_based_features = FeatureUnion(transformer_list=[
-        ('text_length', TextLengthExtractor(col_name='text', reshape=True)),
-        ('avg_token_length', WordLengthMetricsExtractor(col_name='text', metric='avg',
-                                                        split_type='simple', reshape=True)),
-        ('std_token_length', WordLengthMetricsExtractor(col_name='text', metric='std',
-                                                        split_type='simple', reshape=True)),
-        ('contains_spc', ContainsSpecialCharactersExtractor(col_name='text', reshape=True)),
-        ('n_tokens', NumberOfTokensCalculator(col_name='text', reshape=True)),
-        ('contains_dots_bool', ContainsSequentialChars(col_name='text', pattern='..', reshape=True)),
-        ('contains_excl_bool', ContainsSequentialChars(col_name='text', pattern='!!', reshape=True)),
-        ('sentiment_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive', reshape=True)),
-        ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative', reshape=True)),
-        ('contains_uppercase', ContainsUppercaseWords(col_name='text', reshape=True))])
-
     final_pipeline = Pipeline(
         [
-            ('features', FeatureUnion(transformer_list=[
-                # ('vect_based_feat', vect_based_features),
-                ('user_based_feat', user_based_features),
-                # ('embedding_feat', SentenceEmbeddingExtractor(col_name='text'))
-            ])),
+            ('embedding_feat', SentenceEmbeddingExtractor(col_name='text')),
             ('scaling', StandardScaler()),
             # ('scaling', MinMaxScaler()),
             # ('pca', PCA()),
@@ -59,20 +34,8 @@ if __name__ == "__main__":
         ])
 
     params = {
-        'features__user_based_feat__sentiment_positive__count_type': ['boolean', 'counts'],
-        'features__user_based_feat__sentiment_negative__count_type': ['boolean', 'counts'],
-        'features__user_based_feat__contains_uppercase__how': ['bool', 'count'],
-        # 'features__vect_based_feat__vect__min_df': (0.01, 0.05),
-        # 'features__vect_based_feat__vect__max_features': (None, 1000, 2500, 5000),
-        # 'features__vect_based_feat__vect__stop_words': (None, 'english'),
-        # 'features__vect_based_feat__vect__binary': (True, False),
-        # 'features__vect_based_feat__vect__ngram_range': ((1, 1), (1, 2), (1, 3)),  # unigrams, bigrams, trigrams
-        # 'features__vect_based_feat__tfidf__use_idf': (True, False),
-        # 'features__vect_based_feat__tfidf__norm': ('l1', 'l2'),
-        # 'features__vect_based_feat__tfidf__smooth_idf': (True, False),  # do not use
-        # 'features__vect_based_feat__tfidf__sublinear_tf': (True, False),  # do not use
-        # 'features__embedding_feat__embedding__embedding_type': ['tfidf', 'tf'],  # embedding
-        # 'features__embedding_feat__embedding__embedding_dimensions': [50, 100, 200, 300],  # embedding
+        'embedding_feat__embedding_type': ['tfidf', 'tf'],  # embedding
+        'embedding_feat__embedding_dimensions': [50, 100, 200, 300],  # embedding
         'clf__penalty': ('l1', 'l2'),  # Logistic
         # 'clf__kernel': ('rbf', 'linear'),  # SVM
         # 'clf__gamma': (0.1, 0.01, 0.001, 0.0001),  # SVM
