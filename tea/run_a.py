@@ -6,13 +6,12 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import  MultinomialNB
+from sklearn.naive_bayes import MultinomialNB
 from tea.features import *
 from tea.load_data import parse_reviews
 from tea.run_models import run_grid_search
 
 if __name__ == "__main__":
-
     data = parse_reviews(load_data=False)
 
     X_train = data.drop(['polarity'], axis=1)
@@ -20,95 +19,49 @@ if __name__ == "__main__":
 
     X_train_lemmatized = pd.DataFrame(LemmaExtractor(col_name='text').fit_transform(X_train))
 
-    text_length = Pipeline([
-        ('text_length', TextLengthExtractor(col_name='text')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    avg_token_length = Pipeline([
-        ('avg_length', WordLengthMetricsExtractor(col_name='text', metric='avg', split_type='simple')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    std_token_length = Pipeline([
-        ('std_length', WordLengthMetricsExtractor(col_name='text', metric='std', split_type='simple')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    contains_spc_bool = Pipeline([
-        ('bool_spc', ContainsSpecialCharactersExtractor(col_name='text')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    contains_dots_bool = Pipeline([
-        ('bool_dots', ContainsSequentialChars(col_name='text', pattern='..')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    contains_excl_bool = Pipeline([
-        ('bool_excl', ContainsSequentialChars(col_name='text', pattern='!!')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    sentiment_positive = Pipeline([
-        ('sent_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    sentiment_negative = Pipeline([
-        ('sent_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    embedding = Pipeline([
-        ('embedding', SentenceEmbeddingExtractor(col_name='text', embedding_output='vector'))])
-
-    n_tokens = Pipeline([
-        ('n_tokens', NumberOfTokensCalculator(col_name='text')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
-    contains_uppercase = Pipeline([
-        ('cont_uppercase', ContainsUppercaseWords(col_name='text')),
-        ('reshaper', SingleColumnDimensionReshaper())])
-
     vect_based_features = Pipeline([('extract', TextColumnExtractor(column='text')),
                                     ('contractions', ContractionsExpander()),
                                     ('vect', CountVectorizer()),
                                     ('tfidf', TfidfTransformer()),
-                                    ('to_dense', DenseTransformer()),  # transforms sparse to dense
+                                    ('to_dense', DenseTransformer())  # transforms sparse to dense
                                     ])
 
-    user_based_features = Pipeline([('extract',
-                                     FeatureUnion(transformer_list=[
-                                         ('text_length', text_length),
-                                         ('avg_token_length', avg_token_length),
-                                         ('std_token_length', std_token_length),
-                                         ('contains_spc', contains_spc_bool),
-                                         ('n_tokens', n_tokens),
-                                         ('contains_dots_bool', contains_dots_bool),
-                                         ('contains_excl_bool', contains_excl_bool),
-                                         ('sentiment_positive', sentiment_positive),
-                                         ('sentiment_negative', sentiment_negative),
-                                         ('contains_uppercase', contains_uppercase)
-                                     ])),
-                                    ('scale', Normalizer())])
+    user_based_features = FeatureUnion(transformer_list=[
+        ('text_length', TextLengthExtractor(col_name='text', reshape=True)),
+        ('avg_token_length', WordLengthMetricsExtractor(col_name='text', metric='avg',
+                                                        split_type='simple', reshape=True)),
+        ('std_token_length', WordLengthMetricsExtractor(col_name='text', metric='std',
+                                                        split_type='simple', reshape=True)),
+        ('contains_spc', ContainsSpecialCharactersExtractor(col_name='text', reshape=True)),
+        ('n_tokens', NumberOfTokensCalculator(col_name='text', reshape=True)),
+        ('contains_dots_bool', ContainsSequentialChars(col_name='text', pattern='..', reshape=True)),
+        ('contains_excl_bool', ContainsSequentialChars(col_name='text', pattern='!!', reshape=True)),
+        ('sentiment_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive', reshape=True)),
+        ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative', reshape=True)),
+        ('contains_uppercase', ContainsUppercaseWords(col_name='text', reshape=True))])
 
-    final_features = FeatureUnion(transformer_list=[
-        # ('vect_based_feat', vect_based_features),
-        ('user_based_feat', user_based_features),
-        # ('embedding_feat', embedding)
-    ])
-
-    final_pipeline = Pipeline([('features', final_features),
-                               # ('over_sampler', SMOTE()),
-                               ('scaling', StandardScaler()),
-                               # ('scaling', MinMaxScaler()),
-                               # ('pca', PCA()),
-                               # ('clf', SVC()),
-                               # ('clf', MultinomialNB())
-                               ('clf', LogisticRegression())
-                               # ('clf', KNeighborsClassifier())
-                               # ('clf', GradientBoostingClassifier())
-                               # ('clf', RandomForestClassifier())
-                               ])
-
+    final_pipeline = Pipeline(
+        [
+            ('features', FeatureUnion(transformer_list=[
+                # ('vect_based_feat', vect_based_features),
+                ('user_based_feat', user_based_features),
+                # ('embedding_feat', SentenceEmbeddingExtractor(col_name='text'))
+            ])),
+            ('scaling', StandardScaler()),
+            # ('scaling', MinMaxScaler()),
+            # ('pca', PCA()),
+            # ('clf', SVC()),
+            # ('clf', MultinomialNB())
+            ('clf', LogisticRegression())
+            # ('clf', KNeighborsClassifier())
+            # ('clf', GradientBoostingClassifier())
+            # ('clf', RandomForestClassifier())
+        ])
 
     params = {
-        'features__user_based_feat__extract__sentiment_positive__sent_positive__count_type': ['boolean', 'counts'],
-        'features__user_based_feat__extract__sentiment_negative__sent_negative__count_type': ['boolean', 'counts'],
-        'features__user_based_feat__extract__contains_uppercase__cont_uppercase__how': ['bool', 'count'],
+        'features__user_based_feat__sentiment_positive__count_type': ['boolean', 'counts'],
+        'features__user_based_feat__sentiment_negative__count_type': ['boolean', 'counts'],
+        'features__user_based_feat__contains_uppercase__how': ['bool', 'count'],
         # 'features__vect_based_feat__vect__min_df': (0.01, 0.05),
         # 'features__vect_based_feat__vect__max_features': (None, 1000, 2500, 5000),
         # 'features__vect_based_feat__vect__stop_words': (None, 'english'),
