@@ -9,6 +9,7 @@ from sklearn.naive_bayes import MultinomialNB
 from tea.features import *
 from tea.load_data import parse_reviews
 from tea.run_models import run_grid_search
+from sklearn.decomposition import PCA
 
 if __name__ == "__main__":
     data = parse_reviews(load_data=False)
@@ -44,7 +45,7 @@ if __name__ == "__main__":
             ])),
             # ('scaling', StandardScaler()),
             ('scaling', StandardScaler()),
-            # ('pca', PCA()),
+            ('pca', PCA()),
             # ('clf', SVC()),
             # ('clf', MultinomialNB())
             ('clf', LogisticRegression())
@@ -57,9 +58,10 @@ if __name__ == "__main__":
         'features__sentiment_positive__count_type': ['counts', ],  # 'boolean',
         'features__sentiment_negative__count_type': ['counts', ],  # 'boolean',
         'features__contains_uppercase__how': ['count', ],  # 'bool',
-        'features__embedding_feat__embedding_type': ['tf'],  # embedding # 'tfidf',
+        'features__embedding_feat__embedding_type': ['tfidf'],  # embedding # 'tfidf',
         'features__embedding_feat__embedding_dimensions': [300, ],  # embedding  100, 200, 300
-        'clf__penalty': ('l1', 'l2'),  # Logistic
+        'pca__n_components': [100, ],
+        'clf__penalty': ('l2',),  # Logistic  'l2'
         # 'clf__kernel': ('rbf', 'linear'),  # SVM
         # 'clf__gamma': (0.1, 0.01, 0.001, 0.0001),  # SVM
         # 'clf__p': (1, 2),  # 1: mahnatan, 2: eucledian # k-NN
