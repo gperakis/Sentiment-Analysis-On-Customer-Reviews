@@ -433,7 +433,8 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
     def __init__(self,
                  col_name=None,
                  embedding_type='tf',
-                 embedding_dimensions=50):
+                 embedding_dimensions=50,
+                 word_embeddings_dict=None):
         """
 
         :param col_name:
@@ -442,10 +443,12 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
         :param embedding_dimensions:
         """
         assert embedding_type in ['tf', 'tfidf']
+        assert embedding_dimensions in [50, 100, 200, 300]
 
         self.col_name = col_name
         self.embedding_dimensions = embedding_dimensions
         self.embedding_type = embedding_type
+        self.word_embeddings_dict = word_embeddings_dict
 
     def calculate_updated_sentence_embeddings(self, X):
         """
@@ -454,7 +457,10 @@ class SentenceEmbeddingExtractor(BaseEstimator, TransformerMixin):
         :return:
         """
 
-        word_embeddings = WordEmbedding.get_word_embeddings(dimension=self.embedding_dimensions)
+        if self.word_embeddings_dict is None:
+            word_embeddings = WordEmbedding.get_word_embeddings(dimension=self.embedding_dimensions)
+        else:
+            word_embeddings = self.word_embeddings_dict.get(self.embedding_dimensions)
 
         if self.embedding_type == 'tf':
 
