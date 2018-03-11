@@ -1,4 +1,3 @@
-# from imblearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import Normalizer, StandardScaler
@@ -21,7 +20,17 @@ if __name__ == "__main__":
 
     final_pipeline = Pipeline(
         [
-            ('embedding_feat', SentenceEmbeddingExtractor(col_name='text')),
+            ('features', FeatureUnion(transformer_list=[
+                ('text_length', TextLengthExtractor(col_name='text')),
+                ('avg_token_length', WordLengthMetricsExtractor(col_name='text', metric='avg', split_type='simple')),
+                ('std_token_length', WordLengthMetricsExtractor(col_name='text', metric='std', split_type='simple')),
+                ('contains_spc', ContainsSpecialCharactersExtractor(col_name='text')),
+                ('n_tokens', NumberOfTokensCalculator(col_name='text')),
+                ('contains_dots_bool', ContainsSequentialChars(col_name='text', pattern='..')),
+                ('contains_excl_bool', ContainsSequentialChars(col_name='text', pattern='!!')),
+                ('sentiment_positive', HasSentimentWordsExtractor(col_name='text', sentiment='positive')),
+                ('sentiment_negative', HasSentimentWordsExtractor(col_name='text', sentiment='negative')),
+                ('contains_uppercase', ContainsUppercaseWords(col_name='text', reshape=True))])),
             ('scaling', StandardScaler()),
             # ('scaling', MinMaxScaler()),
             # ('pca', PCA()),
@@ -34,8 +43,9 @@ if __name__ == "__main__":
         ])
 
     params = {
-        'embedding_feat__embedding_type': ['tfidf', 'tf'],  # embedding
-        'embedding_feat__embedding_dimensions': [50, 100, 200, 300],  # embedding
+        'features__sentiment_positive__count_type': ['boolean', 'counts'],
+        'features__sentiment_negative__count_type': ['boolean', 'counts'],
+        'features__contains_uppercase__how': ['bool', 'count'],
         'clf__penalty': ('l1', 'l2'),  # Logistic
         # 'clf__kernel': ('rbf', 'linear'),  # SVM
         # 'clf__gamma': (0.1, 0.01, 0.001, 0.0001),  # SVM
