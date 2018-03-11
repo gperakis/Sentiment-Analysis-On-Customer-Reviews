@@ -2,10 +2,10 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import StandardScaler
-
 from tea.features import *
 from tea.load_data import parse_reviews
-from tea.evaluation import create_clf_report
+from tea.evaluation import create_clf_report, prec_recall_multi, plot_micro_prec_recall, \
+    plot_micro_prec_recall_per_class, compute_roc_curve_area, plot_roc_multi
 
 if __name__ == "__main__":
     train_data = parse_reviews(load_data=False, file_type='train')
@@ -50,8 +50,33 @@ if __name__ == "__main__":
         ('clf', LogisticRegression(C=0.1))
     ])
 
-    model = final_pipeline.fit(X=X_train_lemmatized, y=y_train)
+    fitted_model = final_pipeline.fit(X=X_train_lemmatized, y=y_train)
 
-    y_test_pred = model.predict(X_test_lemmatized)
+    y_test_pred = fitted_model.predict(X_test_lemmatized)
 
-    create_clf_report(y_true=y_test, y_pred=y_test_pred, classes=model.classes_)
+    create_clf_report(y_true=y_test,
+                      y_pred=y_test_pred,
+                      classes=fitted_model.classes_)
+
+    prec, recall, av_prec = prec_recall_multi(n_classes=2,
+                                              X_test=X_test_lemmatized,
+                                              Y_test=y_test,
+                                              fittedclf=fitted_model)
+
+    print('Average precision score, micro-averaged over all classes: {0:0.2f}'.format(av_prec["micro"]))
+
+    plot_micro_prec_recall(precision=prec,
+                           recall=recall,
+                           average_precision=av_prec)
+
+    plot_micro_prec_recall_per_class(n_classes=2,
+                                     precision=prec,
+                                     recall=recall,
+                                     average_precision=av_prec)
+
+    fprdict, tprdict, roc_aucdict = compute_roc_curve_area(n_classes=2,
+                                                           X_test=X_test_lemmatized,
+                                                           y_test=y_test,
+                                                           fittedclf=fitted_model)
+
+    plot_roc_multi(fpr=fprdict, tpr=tprdict, roc_auc=roc_aucdict, n_classes=2)

@@ -224,7 +224,7 @@ def create_benchmark_plot(train_X,
     return results
 
 
-def prec_recall_multi(n_classes, X_test, y_test, fittedclf):
+def prec_recall_multi(n_classes, X_test, Y_test, fittedclf):
     """
 
     :param n_classes: int. the number of classes of the data
@@ -501,8 +501,7 @@ if __name__ == "__main__":
     Y = label_binarize(y, classes=[0, 1, 2])
     n_classes = Y.shape[1]
     # Split into training and test
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=.5,
-                                                        random_state=random_state)
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=.5, random_state=random_state)
 
     # We use OneVsRestClassifier for multi-label prediction
     from sklearn.multiclass import OneVsRestClassifier
@@ -512,8 +511,7 @@ if __name__ == "__main__":
     classifier.fit(X_train, Y_train)
 
     # Learn to predict each class against the other
-    classifier2 = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
-                                              random_state=random_state))
+    classifier2 = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True, random_state=random_state))
     classifier2.fit(X_train, Y_train)
 
     # Now plotting begins
