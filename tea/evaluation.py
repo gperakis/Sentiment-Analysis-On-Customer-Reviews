@@ -1,4 +1,5 @@
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_auc_score, precision_recall_curve, average_precision_score
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_auc_score, \
+    precision_recall_curve, average_precision_score
 import pandas as pd
 from sklearn import metrics, svm, datasets
 import matplotlib.pylab as plt
@@ -248,6 +249,7 @@ def prec_recall_multi(n_classes, X_test, y_test, fittedclf):
                                                          average="micro")
     return precision, recall, average_precision
 
+
 def plot_micro_prec_recall(precision, recall, average_precision):
     """
     Created an average precision plot, micro-averaged over all classes
@@ -270,7 +272,7 @@ def plot_micro_prec_recall(precision, recall, average_precision):
     plt.xlim([0.0, 1.0])
     plt.title(
         'Average precision score, micro-averaged over all classes: AP={0:0.2f}'
-        .format(average_precision["micro"]), fontsize=24)
+            .format(average_precision["micro"]), fontsize=24)
 
     plt.show()
 
@@ -284,7 +286,6 @@ def plot_micro_prec_recall_per_class(n_classes, precision, recall, average_preci
     :param average_precision: dict.
     :return: plot
     """
-
 
     sns.set()
     sns.set_style("dark")
@@ -327,6 +328,7 @@ def plot_micro_prec_recall_per_class(n_classes, precision, recall, average_preci
 
     plt.show()
 
+
 def compute_roc_curve_area(n_classes, X_test, y_test, fittedclf):
     """
     Computes the roc curve and roc area for a multiclass problem
@@ -352,7 +354,8 @@ def compute_roc_curve_area(n_classes, X_test, y_test, fittedclf):
 
     return fpr, tpr, roc_auc
 
-def plot_roc_single(fpr, tpr,roc_auc, nclass):
+
+def plot_roc_single(fpr, tpr, roc_auc, nclass):
     """
     Plot roc for a single class
     :param fpr: dict
@@ -374,6 +377,7 @@ def plot_roc_single(fpr, tpr,roc_auc, nclass):
     plt.legend(loc="lower right")
     plt.show()
 
+
 def plot_roc_multi(fpr, tpr, roc_auc, n_classes):
     """
     Plots roc curves for multiclass
@@ -383,7 +387,6 @@ def plot_roc_multi(fpr, tpr, roc_auc, n_classes):
     :param n_classes: int number of classes
     :return:
     """
-
 
     lw = 2
     # Compute macro-average ROC curve and ROC area
@@ -422,7 +425,7 @@ def plot_roc_multi(fpr, tpr, roc_auc, n_classes):
                    ''.format(roc_auc["macro"]),
              color='navy', linestyle=':', linewidth=4)
 
-    #colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
+    # colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
     for i, color in zip(range(n_classes), colors):
         plt.plot(fpr[i], tpr[i], color=color, lw=lw,
                  label='ROC curve of class {0} (area = {1:0.2f})'
@@ -436,7 +439,6 @@ def plot_roc_multi(fpr, tpr, roc_auc, n_classes):
     plt.title('Some extension of Receiver operating characteristic to multi-class')
     plt.legend(loc="lower right")
     plt.show()
-
 
 
 if __name__ == "__main__":
@@ -511,21 +513,20 @@ if __name__ == "__main__":
 
     # Learn to predict each class against the other
     classifier2 = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
-                                             random_state=random_state))
+                                              random_state=random_state))
     classifier2.fit(X_train, Y_train)
 
-    #Now plotting begins
+    # Now plotting begins
 
     prec, recall, av_prec = prec_recall_multi(n_classes, X_test, Y_test, classifier)
-    print('Average precision score, micro-averaged over all classes: {0:0.2f}'
-          .format(av_prec["micro"]))
+    print('Average precision score, micro-averaged over all classes: {0:0.2f}'.format(av_prec["micro"]))
 
     plot_micro_prec_recall(prec, recall, av_prec)
 
     plot_micro_prec_recall_per_class(n_classes, prec, recall, av_prec)
 
-    fprdict, tprdict, roc_aucdict = compute_roc_curve_area(n_classes, X_test, Y_test,  classifier2)
+    fprdict, tprdict, roc_aucdict = compute_roc_curve_area(n_classes, X_test, Y_test, classifier2)
 
     plot_roc_single(fprdict, tprdict, roc_aucdict, 2)
 
-    plot_roc_multi(fprdict, tprdict, roc_aucdict,n_classes)
+    plot_roc_multi(fprdict, tprdict, roc_aucdict, n_classes)
