@@ -1,7 +1,7 @@
 # Sentiment Analysis on Customer Reviews
+### Text engineering course
 
 This repository holds the implementation of the 2nd (second) assignment for the Text Engineering and Analytics course, which is part of the M.Sc. in Data Science program of the Athens University of Economics and Business.
-
 
 ### Assignment Description:
 
@@ -30,3 +30,17 @@ http://alt.qcri.org/semeval2016/task4/. For customer reviews, you may want to us
 http://alt.qcri.org/semeval2016/task5/. Consult the instructor for further details.
 * Pre-trained word embeddings are available, for example, from http://nlp.stanford.edu/projects/glove/.
 See also word2vec (https://code.google.com/archive/p/word2vec/). 
+
+# Implementation Details
+
+## Getting started
+The following instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+
+### Installing
+In order to run the code in your local environment, please make sure your have python 3. and above and to have installed the needed python libraries.
+To install the libraries please run on your console:
+
+```
+pip install -r requirements.txt file
+```
+
