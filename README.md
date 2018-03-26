@@ -7,7 +7,7 @@ This repository holds the implementation of the 2nd (second) assignment for the 
 
 1. Develop a text classifier for a kind of texts of your choice (e.g., e-mail messages, tweets,
 customer reviews) and at least two classes (e.g., spam/ham, positive/negative/neutral).
-2  You may use Boolean, TF, or TF-IDF features corresponding to words or n-grams, to which you
+2. You may use Boolean, TF, or TF-IDF features corresponding to words or n-grams, to which you
 can also add other features (e.g., length of the text). You may apply any feature selection (or
 dimensionality reduction) method you consider appropriate. You may also want to try using
 centroids of pre-trained word embeddings (slide 36).
